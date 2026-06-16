@@ -15,7 +15,7 @@
     .panel.active { display: block; }
     .form-group { margin-bottom: 12px; }
     label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-    input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
     button { background: #2e7d32; color: white; padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
     button:hover { background: #1b5e20; }
     button.secondary { background: #607d8b; }
@@ -57,7 +57,12 @@
         <div>
           <h3>Вход по логину/паролю</h3>
           <div class="form-group"><label>Логин (user_name)</label><input id="a_user_name" type="text"></div>
-          <div class="form-group"><label>Пароль</label><input id="a_password" type="password"></div>
+          <div class="form-group"><label>Пароль</label>
+            <div style="display:flex; gap:6px;">
+              <input id="a_password" type="password">
+              <button type="button" class="secondary small" onclick="togglePassword()" style="white-space:nowrap;" id="a_password_eye">Показать</button>
+            </div>
+          </div>
           <button onclick="login()">Войти и получить токен</button>
         </div>
         <div>
@@ -73,16 +78,22 @@
   <div class="tabs">
     <div class="tab active" data-tab="categories" onclick="switchTab('categories')">Категории</div>
     <div class="tab" data-tab="products" onclick="switchTab('products')">Товары</div>
+    <div class="tab" data-tab="limits" onclick="switchTab('limits')">Лимиты</div>
   </div>
 
   <div class="panel active" id="panel-categories">
     <div class="section">
       <h2 id="c_form_title">Создать категорию</h2>
-      <div class="grid">
+      <div class="grid">  
+        <div class="form-group"><label>Название RU</label><input id="c_name_ru" type="text" onblur="translateNames('c')"></div>
         <div class="form-group"><label>Название KK</label><input id="c_name_kk" type="text"></div>
-        <div class="form-group"><label>Название RU</label><input id="c_name_ru" type="text"></div>
         <div class="form-group"><label>Название EN</label><input id="c_name_en" type="text"></div>
-        <div class="form-group"><label>Marketplace ID</label><input id="c_marketplace_id" type="number"></div>
+        <div class="form-group">
+          <label>Marketplace ID</label>
+          <select id="c_marketplace_id" type="number">
+            <option value="">— выбери marketplace —</option>
+          </select>
+        </div>
          <div class="form-group">
           <label>Institution IDs (через запятую: 1,2)</label>
           <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
@@ -91,8 +102,8 @@
           </label>
           <input id="c_institution_ids" type="text">
         </div>
-        <div class="form-group"><label>Родительская категория (необязательно)</label><select id="c_parent_id"><option value="">— верхний уровень —</option></select></div>
-        <div class="form-group"><label>Sort Order (необязательно)</label><input id="c_sort_order" type="number"></div>
+        <div class="form-group"><label>Родительская категория (необязательно)</label><select id="c_parent_id" onchange="autoFillSortOrder()"><option value="">— верхний уровень —</option></select></div>
+        <div class="form-group"><label>Порядок сортировки</label><input id="c_sort_order" type="number"></div>
         <div class="form-group">
           <label>Изображение</label>
           <img id="c_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
@@ -126,9 +137,12 @@
     <div class="section">
       <h2 id="p_form_title">Создать товар</h2>
       <div class="grid">
+        <div class="form-group"><label>Название RU</label><input id="p_name_ru" type="text" onblur="translateNames('p')"></div>
         <div class="form-group"><label>Название KK</label><input id="p_name_kk" type="text"></div>
-        <div class="form-group"><label>Название RU</label><input id="p_name_ru" type="text"></div>
-        <div class="form-group"><label>Название EN</label><input id="p_name_en" type="text"></div>
+        <div class="form-group"><label>Название EN</label><input id="p_name_en" type="text" onblur="autoFillSku()"></div>
+        <div class="form-group"><label>Описание RU (необязательно)</label><textarea id="p_description_ru" rows="2" onblur="translateDescriptions('p')"></textarea></div>
+        <div class="form-group"><label>Описание KK (необязательно)</label><textarea id="p_description_kk" rows="2"></textarea></div>
+        <div class="form-group"><label>Описание EN (необязательно)</label><textarea id="p_description_en" rows="2"></textarea></div>
         <div class="form-group">
           <label>Marketplace ID</label>
           <select id="p_marketplace_id" type="number"></select>
@@ -147,10 +161,28 @@
         </div>
         <div class="form-group"><label>Цена</label><input id="p_price" type="number"></div>
         <div class="form-group"><label>SKU (код товара)</label><input id="p_sku" type="text"></div>
-        <div class="form-group"><label>Остаток</label><input id="p_stock_quantity" type="number"></div>
+        <div class="form-group"><label>Остаток</label><input id="p_stock_quantity" type="number"></div>  
+        <div class="form-group">
+          <label>Лимит покупки (шаблон)</label>
+          <select id="p_purchase_limit_id" onchange="checkLimitSent()">
+            <option value="">— без лимита —</option>
+          </select>
+          <div id="p_limit_warn" class="hint" style="display:none; color:#c62828;">Этот лимит ещё не отправлен на прод — сначала отправь его во вкладке «Лимиты», иначе он не привяжется к товару.</div>
+         </div>
+         <div class="form-group">
+          <label>Тип товара</label>
+          <select id="p_product_type_id" type="number">
+            <option value="">— выбери тип товара —</option>
+          </select>
+        </div>
         <div class="form-group"><label>Вес за единицу (weight_per_unit)</label><input id="p_weight_per_unit" type="number" step="any"></div>
-        <div class="form-group"><label>Product Type ID</label><input id="p_product_type_id" type="number"></div>
-        <div class="form-group"><label>UOM ID (единица измерения)</label><input id="p_uom_id" type="number"></div>
+ 
+        <div class="form-group">
+          <label>UOM ID (единица измерения)</label>
+          <select id="p_uom_id" type="number">
+            <option value="">— выбери единицу измерения —</option>
+      </select>
+        </div>
         <div class="form-group">
           <label>Изображение</label>
           <img id="p_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
@@ -180,13 +212,69 @@
     </div>
   </div>
 
+  <div class="panel" id="panel-limits">
+    <div class="section">
+      <h2 id="l_form_title">Создать шаблон лимита</h2>
+      <div class="grid">
+        <div class="form-group"><label>Название RU</label><input id="l_name_ru" type="text" onblur="translateNames('l')"></div>
+        <div class="form-group"><label>Название KK</label><input id="l_name_kk" type="text"></div>
+        <div class="form-group"><label>Название EN</label><input id="l_name_en" type="text"></div>
+        <div class="form-group">
+          <label>Marketplace ID</label>
+          <select id="l_marketplace_id"></select>
+        </div>
+        <div class="form-group"><label>Значение лимита за месяц</label><input id="l_limit_value" type="number" step="any"></div>
+        <div class="form-group">
+          <label>Единица измерения (limit_uom_id)</label>
+          <select id="l_limit_uom_id"><option value="">— выбери единицу измерения —</option></select>
+        </div>
+      </div>
+      <button id="l_save_btn" onclick="saveLimit()">Сохранить</button>
+      <button id="l_cancel_btn" class="secondary" onclick="cancelEditLimit()" style="display:none">Отмена</button>
+      <div id="l_result" class="result"></div>
+    </div>
+
+    <div class="section">
+      <h2>Сохранённые лимиты</h2>
+      <div class="actions">
+        <button onclick="sendAllLimits()">Отправить всё</button>
+        <button class="secondary" onclick="loadLimits()">Обновить</button>
+      </div>
+      <div id="lim_result" class="result"></div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>RU</th><th>Mkt</th><th>Значение</th><th>Ед.изм</th><th>Прод-id</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody id="lim_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
   <script>
     let categoriesData = [];
     let productsData = [];
+    let limitsData = [];
     let editCatId = null;
     let editProdId = null;
+    let editLimitId = null;
 
     const ALL_INSTITUTIONS = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17';
+
+    const PRODUCT_TYPES = [
+      { id: 1, name: 'Обычный' },
+      { id: 2, name: 'Скоропортящийся' },
+    ];
+
+    const UOMs = [
+      { id: 1, name: 'шт - Штук' },
+      { id: 2, name: 'кг - Килограммы' },
+      { id: 3, name: 'г - Граммы' },
+      { id: 4, name: 'л - Литры' },
+      { id: 5, name: 'блок - Блоки' },
+      { id: 6, name: 'упаковка - Упаковки' },
+      { id: 7, name: 'мл - Миллилитры' },
+    ];
+
 
     const MARKETPLACES = [
       { id: 1, name: 'Bromart Market' },
@@ -199,10 +287,81 @@
       document.getElementById('panel-' + name).classList.add('active');
     }
 
+    async function translate(text, to) {
+      try {
+        const res = await fetch('/translate?to=' + to + '&text=' + encodeURIComponent(text));
+        const data = await res.json();
+        return data.text || '';
+      } catch (err) {
+        return '';
+      }
+    }
+
+    async function translateNames(prefix) {
+      const ru = document.getElementById(prefix + '_name_ru').value.trim();
+      if (!ru) return;
+      const kk = document.getElementById(prefix + '_name_kk');
+      const en = document.getElementById(prefix + '_name_en');
+      if (!kk.value) kk.value = await translate(ru, 'kk');
+      if (!en.value) en.value = await translate(ru, 'en');
+      if (prefix === 'p') autoFillSku();
+    }
+
+    async function translateDescriptions(prefix) {
+      const ru = document.getElementById(prefix + '_description_ru').value.trim();
+      if (!ru) return;
+      const kk = document.getElementById(prefix + '_description_kk');
+      const en = document.getElementById(prefix + '_description_en');
+      if (!kk.value) kk.value = await translate(ru, 'kk');
+      if (!en.value) en.value = await translate(ru, 'en');
+    }
+
+    
+
+  
+    function generateSku(name) {
+      const base = (name || '').trim().toUpperCase()
+        .replace(/[^A-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 24);
+      if (!base) return '';
+      const suffix = Date.now().toString(36).slice(-4).toUpperCase();
+      return base + '-' + suffix;
+    }
+
+    function autoFillSku() {
+      if (!p_sku.value) p_sku.value = generateSku(p_name_en.value);
+    }
+
     function show(id, data, ok) {
       const el = document.getElementById(id);
       el.className = 'result ' + (ok ? 'success' : 'error');
       el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    }
+
+    function errText(data) {
+      if (data && data.detail) {
+        if (data.detail.message) return data.detail.message + (data.detail.code ? ' (' + data.detail.code + ')' : '');
+        if (typeof data.detail === 'string') return data.detail;
+      }
+      if (data && data.message) return data.message;
+      return typeof data === 'string' ? data : JSON.stringify(data);
+    }
+
+    function showResult(id, data) {
+      show(id, data.success ? (data.message || 'Готово') : errText(data), data.success);
+    }
+
+    function summarizeResults(id, data) {
+      if (!data.results) { showResult(id, data); return; }
+      const fail = data.results.filter(r => !r.success);
+      const ok = data.results.length - fail.length;
+      let txt = 'Отправлено: ' + ok + ' из ' + data.results.length;
+      if (fail.length) {
+        txt += '\nОшибки:';
+        for (const f of fail) txt += '\n  #' + f.id + ': ' + (f.message || f.error);
+      }
+      show(id, txt, fail.length === 0);
     }
 
     function setVal(id, v) {
@@ -220,6 +379,36 @@
       } else {
         p_institution_ids.disabled = false;
       }
+    }
+
+    function populateTypesProduct() {
+      const options = PRODUCT_TYPES.map(t => `<option value="${t.id}">${t.name} (id ${t.id})</option>`).join('');
+      p_product_type_id.innerHTML = '<option value="">— выбери тип товара —</option>' + options;
+    }
+
+    function populateUOMs() {
+      const options = UOMs.map(u => `<option value="${u.id}">${u.name} (id ${u.id})</option>`).join('');
+      p_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
+      l_limit_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
+    }
+
+    function uomName(id) {
+      const u = UOMs.find(x => x.id === Number(id));
+      return u ? u.name : (id || '');
+    }
+
+    function populateProductLimits() {
+      const keep = p_purchase_limit_id.value;
+      const options = limitsData.map(l => `<option value="${l.id}">${l.name_ru || ('id ' + l.id)} — ${l.limit_value} ${uomName(l.limit_uom_id)}</option>`).join('');
+      p_purchase_limit_id.innerHTML = '<option value="">— без лимита —</option>' + options;
+      p_purchase_limit_id.value = keep;
+      checkLimitSent();
+    }
+
+    function checkLimitSent() {
+      const id = Number(p_purchase_limit_id.value);
+      const limit = limitsData.find(l => l.id === id);
+      p_limit_warn.style.display = (limit && !limit.sent) ? '' : 'none';
     }
 
     function toggleAllCatInstitutions() {
@@ -253,6 +442,7 @@
       const options = MARKETPLACES.map(m => `<option value="${m.id}">${m.name} (id ${m.id})</option>`).join('');
       p_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
       c_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
+      l_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
     }
 
     function catName(c) {
@@ -323,6 +513,8 @@
       c_all_inst.checked = true;
       toggleAllCatInstitutions();
       showCurrentImage('c', null);
+      c_parent_id.value = '';
+      autoFillSortOrder();
       c_form_title.textContent = 'Создать категорию';
       c_save_btn.textContent = 'Сохранить';
       c_cancel_btn.style.display = 'none';
@@ -348,6 +540,16 @@
         </tr>`).join('');
       populateProductCategories();
       populateCategoryParents();
+      if (!editCatId) autoFillSortOrder();
+    }
+
+    function autoFillSortOrder() {
+      const parentId = c_parent_id.value ? Number(c_parent_id.value) : null;
+      const siblings = categoriesData.filter(c => (c.parent_id || null) === parentId && c.id !== editCatId);
+      const used = new Set(siblings.map(c => Number(c.sort_order)).filter(n => n > 0));
+      let n = 1;
+      while (used.has(n)) n++;
+      c_sort_order.value = n;
     }
 
     function populateCategoryParents() {
@@ -361,7 +563,7 @@
       try {
         const res = await fetch('/send-category/' + id, { method: 'POST' });
         const data = await res.json();
-        show('cat_result', data.message || data, data.success);
+        showResult('cat_result', data);
       } catch (err) { show('cat_result', err.message, false); }
       loadCategories();
     }
@@ -370,7 +572,7 @@
       try {
         const res = await fetch('/send-all-categories', { method: 'POST' });
         const data = await res.json();
-        show('cat_result', data, data.success);
+        summarizeResults('cat_result', data);
       } catch (err) { show('cat_result', err.message, false); }
       loadCategories();
     }
@@ -399,11 +601,15 @@
       form.append('name_kk', p_name_kk.value);
       form.append('name_ru', p_name_ru.value);
       form.append('name_en', p_name_en.value);
+      form.append('description_ru', p_description_ru.value);
+      form.append('description_kk', p_description_kk.value);
+      form.append('description_en', p_description_en.value);
       form.append('marketplace_id', p_marketplace_id.value);
       form.append('category_id', p_category_id.value);
       form.append('institution_ids', p_institution_ids.value);
       form.append('price', p_price.value);
       form.append('sku', p_sku.value);
+      form.append('purchase_limit_id', p_purchase_limit_id.value);
       form.append('stock_quantity', p_stock_quantity.value);
       form.append('weight_per_unit', p_weight_per_unit.value);
       form.append('product_type_id', p_product_type_id.value);
@@ -425,6 +631,11 @@
       setVal('p_name_kk', p.name_kk);
       setVal('p_name_ru', p.name_ru);
       setVal('p_name_en', p.name_en);
+      setVal('p_description_ru', p.description_ru);
+      setVal('p_description_kk', p.description_kk);
+      setVal('p_description_en', p.description_en);
+      setVal('p_purchase_limit_id', p.purchase_limit_id);
+      checkLimitSent();
       setVal('p_marketplace_id', p.marketplace_id);
       selectProductCategory(p.category_id);
       setVal('p_institution_ids', p.institution_ids);
@@ -446,8 +657,10 @@
 
     function cancelEditProduct() {
       editProdId = null;
-      document.querySelectorAll('#panel-products input').forEach(i => i.value = '');
+      document.querySelectorAll('#panel-products input, #panel-products textarea').forEach(i => i.value = '');
       p_category_id.value = '';
+      p_purchase_limit_id.value = '';
+      checkLimitSent();
       p_all_inst.checked = true;
       toggleAllInstitutions();
       showCurrentImage('p', null);
@@ -480,7 +693,7 @@
       try {
         const res = await fetch('/send-product/' + id, { method: 'POST' });
         const data = await res.json();
-        show('prod_result', data.message || data, data.success);
+        showResult('prod_result', data);
       } catch (err) { show('prod_result', err.message, false); }
       loadProducts();
     }
@@ -489,7 +702,7 @@
       try {
         const res = await fetch('/send-all-products', { method: 'POST' });
         const data = await res.json();
-        show('prod_result', data, data.success);
+        summarizeResults('prod_result', data);
       } catch (err) { show('prod_result', err.message, false); }
       loadProducts();
     }
@@ -511,6 +724,105 @@
         show('prod_result', data.message || data, data.success);
       } catch (err) { show('prod_result', err.message, false); }
       loadProducts();
+    }
+
+    async function saveLimit() {
+      const body = {
+        name_kk: l_name_kk.value,
+        name_ru: l_name_ru.value,
+        name_en: l_name_en.value,
+        marketplace_id: l_marketplace_id.value,
+        limit_value: l_limit_value.value,
+        limit_uom_id: l_limit_uom_id.value,
+      };
+      const url = editLimitId ? '/update-purchase-limit/' + editLimitId : '/save-purchase-limit';
+      try {
+        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const data = await res.json();
+        show('l_result', data.message || data, data.success);
+        if (data.success) { cancelEditLimit(); loadLimits(); }
+      } catch (err) { show('l_result', err.message, false); }
+    }
+
+    function editLimit(id) {
+      const l = limitsData.find(x => x.id === id);
+      if (!l) return;
+      editLimitId = id;
+      setVal('l_name_kk', l.name_kk);
+      setVal('l_name_ru', l.name_ru);
+      setVal('l_name_en', l.name_en);
+      setVal('l_marketplace_id', l.marketplace_id);
+      setVal('l_limit_value', l.limit_value);
+      setVal('l_limit_uom_id', l.limit_uom_id);
+      l_form_title.textContent = 'Редактировать лимит #' + id;
+      l_save_btn.textContent = 'Обновить';
+      l_cancel_btn.style.display = '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelEditLimit() {
+      editLimitId = null;
+      document.querySelectorAll('#panel-limits input').forEach(i => i.value = '');
+      l_marketplace_id.value = '';
+      l_limit_uom_id.value = '';
+      l_form_title.textContent = 'Создать шаблон лимита';
+      l_save_btn.textContent = 'Сохранить';
+      l_cancel_btn.style.display = 'none';
+    }
+
+    async function loadLimits() {
+      const res = await fetch('/purchase-limits');
+      limitsData = await res.json();
+      lim_tbody.innerHTML = limitsData.map(l => `
+        <tr>
+          <td>${l.id}</td>
+          <td>${l.name_ru || ''}</td>
+          <td>${l.marketplace_id || ''}</td>
+          <td>${l.limit_value != null ? l.limit_value : ''}</td>
+          <td>${uomName(l.limit_uom_id)}</td>
+          <td>${l.prod_id || ''}</td>
+          <td>${statusBadge(l.sent)}</td>
+          <td>
+            <button class="small" onclick="sendLimit(${l.id})">Отправить</button>
+            <button class="small secondary" onclick="editLimit(${l.id})">Изменить</button>
+            <button class="small danger" onclick="deleteLimit(${l.id})">Удалить</button>
+          </td>
+        </tr>`).join('');
+      populateProductLimits();
+    }
+
+    async function sendLimit(id) {
+      try {
+        const res = await fetch('/send-purchase-limit/' + id, { method: 'POST' });
+        const data = await res.json();
+        showResult('lim_result', data);
+      } catch (err) { show('lim_result', err.message, false); }
+      loadLimits();
+    }
+
+    async function sendAllLimits() {
+      try {
+        const res = await fetch('/send-all-purchase-limits', { method: 'POST' });
+        const data = await res.json();
+        summarizeResults('lim_result', data);
+      } catch (err) { show('lim_result', err.message, false); }
+      loadLimits();
+    }
+
+    async function deleteLimit(id) {
+      if (!confirm('Удалить лимит #' + id + '?')) return;
+      try {
+        const res = await fetch('/delete-purchase-limit/' + id, { method: 'POST' });
+        const data = await res.json();
+        show('lim_result', data.message || data, data.success);
+      } catch (err) { show('lim_result', err.message, false); }
+      loadLimits();
+    }
+
+    function togglePassword() {
+      const show = a_password.type === 'password';
+      a_password.type = show ? 'text' : 'password';
+      a_password_eye.textContent = show ? 'Скрыть' : 'Показать';
     }
 
     function toggleAuthForms() {
@@ -572,14 +884,17 @@
       refreshAuthStatus();
     }
 
+    populateUOMs();
     toggleAllInstitutions();
     toggleAllCatInstitutions();
     populateMarketplaces();
+    populateTypesProduct();
     populateProductCategories();
     populateCategoryParents();
     refreshAuthStatus();
     loadCategories();
     loadProducts();
+    loadLimits();
   </script>
 </body>
 </html>
