@@ -3,12 +3,14 @@ const multer = require('multer');
 const router = express.Router();
 const db = require('../db');
 const { sendProduct, resolveImage } = require('../bromart');
+const { fillTranslations } = require('../translate');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post('/save-product', upload.single('image'), async (req, res) => {
   try {
     const b = req.body;
+    await fillTranslations(b, ['name', 'description']);
     const img = await resolveImage(req);
     db.prepare(`
       INSERT INTO products (name_kk, name_ru, name_en, description_kk, description_ru, description_en, marketplace_id, category_id, institution_ids, price, sku, stock_quantity, product_type_id, uom_id, weight_per_unit, purchase_limit_id, image_name, image_data, image_mime)
@@ -30,6 +32,7 @@ router.post('/update-product/:id', upload.single('image'), async (req, res) => {
     const product = db.prepare('SELECT id FROM products WHERE id = ?').get(req.params.id);
     if (!product) return res.status(404).json({ success: false, message: 'Товар не найден' });
     const b = req.body;
+    await fillTranslations(b, ['name', 'description']);
     const img = await resolveImage(req);
     if (img.data) {
       db.prepare(`

@@ -2,10 +2,12 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { sendPurchaseLimit } = require('../bromart');
+const { fillTranslations } = require('../translate');
 
-router.post('/save-purchase-limit', (req, res) => {
+router.post('/save-purchase-limit', async (req, res) => {
   try {
     const b = req.body;
+    await fillTranslations(b, ['name']);
     db.prepare(`
       INSERT INTO purchase_limits (name_kk, name_ru, name_en, marketplace_id, limit_value, limit_uom_id)
       VALUES (?, ?, ?, ?, ?, ?)
@@ -16,11 +18,12 @@ router.post('/save-purchase-limit', (req, res) => {
   }
 });
 
-router.post('/update-purchase-limit/:id', (req, res) => {
+router.post('/update-purchase-limit/:id', async (req, res) => {
   try {
     const limit = db.prepare('SELECT id FROM purchase_limits WHERE id = ?').get(req.params.id);
     if (!limit) return res.status(404).json({ success: false, message: 'Лимит не найден' });
     const b = req.body;
+    await fillTranslations(b, ['name']);
     db.prepare(`
       UPDATE purchase_limits SET name_kk=?, name_ru=?, name_en=?, marketplace_id=?, limit_value=?, limit_uom_id=?, sent=0 WHERE id=?
     `).run(b.name_kk, b.name_ru, b.name_en, b.marketplace_id, b.limit_value, b.limit_uom_id, req.params.id);

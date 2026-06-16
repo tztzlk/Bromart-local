@@ -3,12 +3,14 @@ const multer = require('multer');
 const router = express.Router();
 const db = require('../db');
 const { sendCategory } = require('../bromart');
+const { fillTranslations } = require('../translate');
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post('/save-category', upload.single('image'), (req, res) => {
+router.post('/save-category', upload.single('image'), async (req, res) => {
   try {
     const b = req.body;
+    await fillTranslations(b, ['name']);
     db.prepare(`
       INSERT INTO categories (name_kk, name_ru, name_en, marketplace_id, institution_ids, parent_id, sort_order, image_name, image_data, image_mime)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -25,11 +27,12 @@ router.post('/save-category', upload.single('image'), (req, res) => {
   }
 });
 
-router.post('/update-category/:id', upload.single('image'), (req, res) => {
+router.post('/update-category/:id', upload.single('image'), async (req, res) => {
   try {
     const cat = db.prepare('SELECT id FROM categories WHERE id = ?').get(req.params.id);
     if (!cat) return res.status(404).json({ success: false, message: 'Категория не найдена' });
     const b = req.body;
+    await fillTranslations(b, ['name']);
     if (req.file) {
       db.prepare(`
         UPDATE categories SET name_kk=?, name_ru=?, name_en=?, marketplace_id=?, institution_ids=?, parent_id=?, sort_order=?, image_name=?, image_data=?, image_mime=?, sent=0 WHERE id=?
