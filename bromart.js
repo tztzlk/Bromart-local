@@ -97,9 +97,66 @@ async function sendPurchaseLimit(limit) {
   db.prepare('UPDATE purchase_limits SET sent = 1, prod_id = ? WHERE id = ?').run(prodId, limit.id);
 }
 
+async function sendContact(contact) {
+  await ensureToken();
+  const body = {
+    type: contact.type || '',
+    value: contact.value || '',
+    label_ru: contact.label_ru || '',
+    label_kk: contact.label_kk || '',
+    label_en: contact.label_en || '',
+    is_active: contact.is_active ? 1 : 0,
+    is_global: contact.is_global ? 1 : 0,
+    institution_ids: contact.institution_ids || '',
+    sort_order: contact.sort_order != null && contact.sort_order !== '' ? contact.sort_order : null,
+  };
+  const resp = await axios.post(BROMART_URL + '/api/v1/admin/contacts', body, { headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+  const d = resp.data;
+  const prodId = (d && d.data && d.data.id) || (d && d.id) || null;
+  db.prepare('UPDATE contacts SET sent = 1, prod_id = ? WHERE id = ?').run(prodId, contact.id);
+  return prodId;
+}
+
+async function sendFaqCategory(category) {
+  await ensureToken();
+  const body = {
+    name_ru: category.name_ru || '',
+    name_kk: category.name_kk || '',
+    name_en: category.name_en || '',
+    sort_order: category.sort_order != null && category.sort_order !== '' ? category.sort_order : null,
+  };
+  const resp = await axios.post(BROMART_URL + '/api/v1/admin/faq/categories', body, { headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+  const d = resp.data;
+  const prodId = (d && d.data && d.data.id) || (d && d.id) || null;
+  db.prepare('UPDATE faq_categories SET sent = 1, prod_id = ? WHERE id = ?').run(prodId, category.id);
+  return prodId;
+}
+
+async function sendFaqArticle(article) {
+  await ensureToken();
+  const body = {
+    category_id: article.category_id || null,
+    title_ru: article.title_ru || '',
+    title_kk: article.title_kk || '',
+    title_en: article.title_en || '',
+    body_ru: article.body_ru || '',
+    body_kk: article.body_kk || '',
+    body_en: article.body_en || '',
+    is_global: article.is_global ? 1 : 0,
+    institution_ids: article.institution_ids || '',
+    sort_order: article.sort_order != null && article.sort_order !== '' ? article.sort_order : null,
+  };
+  const resp = await axios.post(BROMART_URL + '/api/v1/admin/faq/articles', body, { headers: { 'Content-Type': 'application/json', ...authHeaders() } });
+  const d = resp.data;
+  const prodId = (d && d.data && d.data.id) || (d && d.id) || null;
+  db.prepare('UPDATE faq_articles SET sent = 1, prod_id = ? WHERE id = ?').run(prodId, article.id);
+  return prodId;
+} 
+
+
 function resolveImage(req) {
   if (req.file) return { name: req.file.originalname, data: req.file.buffer, mime: req.file.mimetype };
   return { name: null, data: null, mime: null };
 }
 
-module.exports = { sendCategory, sendProduct, sendPurchaseLimit, resolveImage };
+module.exports = { sendCategory, sendProduct, sendPurchaseLimit, resolveImage, sendContact, sendFaqArticle, sendFaqCategory };

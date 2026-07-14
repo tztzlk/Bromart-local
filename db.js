@@ -53,6 +53,44 @@ db.exec(`
     prod_id INTEGER,
     sent INTEGER DEFAULT 0
   );
+  CREATE TABLE IF NOT EXISTS faq_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name_ru TEXT,
+    name_kk TEXT,
+    name_en TEXT,
+    sort_order INTEGER,
+    prod_id INTEGER,
+    sent INTEGER DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS faq_articles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category_id INTEGER,
+    title_ru TEXT,
+    title_kk TEXT,
+    title_en TEXT,
+    body_ru TEXT,
+    body_kk TEXT,
+    body_en TEXT,
+    is_global INTEGER,
+    institution_ids TEXT,
+    sort_order INTEGER,
+    prod_id INTEGER,
+    sent INTEGER DEFAULT 0
+  );
+  CREATE TABLE IF NOT EXISTS contacts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT,
+    value TEXT,
+    label_ru TEXT,
+    label_kk TEXT,
+    label_en TEXT,
+    is_active INTEGER,
+    is_global INTEGER,
+    institution_ids TEXT,
+    sort_order INTEGER,
+    prod_id INTEGER,
+    sent INTEGER DEFAULT 0
+  );
   CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT

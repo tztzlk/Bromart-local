@@ -1,900 +1,1405 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Bromart Local</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 1000px; margin: 30px auto; padding: 0 20px; color: #222; }
-    h1 { color: #2e7d32; }
-    h2 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 8px; }
-    .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
-    .tab { padding: 10px 24px; cursor: pointer; border: 1px solid #2e7d32; border-radius: 4px; background: white; color: #2e7d32; font-size: 16px; }
-    .tab.active { background: #2e7d32; color: white; }
-    .panel { display: none; }
-    .panel.active { display: block; }
-    .form-group { margin-bottom: 12px; }
-    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
-    button { background: #2e7d32; color: white; padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
-    button:hover { background: #1b5e20; }
-    button.secondary { background: #607d8b; }
-    button.secondary:hover { background: #455a64; }
-    button.danger { background: #c62828; }
-    button.danger:hover { background: #8e0000; }
-    button.small { padding: 5px 12px; font-size: 13px; }
-    .result { margin-top: 12px; padding: 12px; border-radius: 4px; white-space: pre-wrap; }
-    .result:empty { display: none; }
-    .success { background: #e8f5e9; border: 1px solid #2e7d32; }
-    .error { background: #ffebee; border: 1px solid #c62828; }
-    .section { margin-bottom: 36px; }
-    .actions { margin: 16px 0; display: flex; gap: 8px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background: #f1f8e9; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .auth-bar { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
-    .auth-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .auth-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
-    .auth-cols h3 { margin: 0 0 10px; font-size: 15px; }
-    .hint { font-size: 12px; color: #666; margin-top: 8px; }
-    #auth_state.ok { color: #2e7d32; font-weight: bold; }
-    #auth_state.no { color: #c62828; font-weight: bold; }
-  </style>
-</head>
-<body>
-  <h1>Bromart Local — каталог</h1>
+  <!DOCTYPE html>
+  <html lang="ru">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bromart Local</title>
+    <style>
+      body { font-family: Arial, sans-serif; max-width: 1000px; margin: 30px auto; padding: 0 20px; color: #222; }
+      h1 { color: #2e7d32; }
+      h2 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 8px; }
+      .tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+      .tab { padding: 10px 24px; cursor: pointer; border: 1px solid #2e7d32; border-radius: 4px; background: white; color: #2e7d32; font-size: 16px; }
+      .tab.active { background: #2e7d32; color: white; }
+      .panel { display: none; }
+      .panel.active { display: block; }
+      .form-group { margin-bottom: 12px; }
+      label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; }
+      input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; }
+      button { background: #2e7d32; color: white; padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+      button:hover { background: #1b5e20; }
+      button.secondary { background: #607d8b; }
+      button.secondary:hover { background: #455a64; }
+      button.danger { background: #c62828; }
+      button.danger:hover { background: #8e0000; }
+      button.small { padding: 5px 12px; font-size: 13px; }
+      .result { margin-top: 12px; padding: 12px; border-radius: 4px; white-space: pre-wrap; }
+      .result:empty { display: none; }
+      .success { background: #e8f5e9; border: 1px solid #2e7d32; }
+      .error { background: #ffebee; border: 1px solid #c62828; }
+      .section { margin-bottom: 36px; }
+      .actions { margin: 16px 0; display: flex; gap: 8px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background: #f1f8e9; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .auth-bar { background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 14px 16px; margin-bottom: 24px; }
+      .auth-status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .auth-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 16px; }
+      .auth-cols h3 { margin: 0 0 10px; font-size: 15px; }
+      .hint { font-size: 12px; color: #666; margin-top: 8px; }
+      #auth_state.ok { color: #2e7d32; font-weight: bold; }
+      #auth_state.no { color: #c62828; font-weight: bold; }
+    </style>
+  </head>
+  <body>
+    <h1>Bromart Local — каталог</h1>
 
-  <div class="auth-bar">
-    <div class="auth-status">
-      Статус прода: <span id="auth_state">проверяю...</span>
-      <button class="secondary small" id="logout_btn" onclick="logout()" style="display:none">Выйти</button>
-      <button class="secondary small" onclick="toggleAuthForms()">Войти / сменить токен</button>
-    </div>
-
-    <div id="auth_forms" style="display:none">
-      <div class="auth-cols">
-        <div>
-          <h3>Вход по логину/паролю</h3>
-          <div class="form-group"><label>Логин (user_name)</label><input id="a_user_name" type="text"></div>
-          <div class="form-group"><label>Пароль</label>
-            <div style="display:flex; gap:6px;">
-              <input id="a_password" type="password">
-              <button type="button" class="secondary small" onclick="togglePassword()" style="white-space:nowrap;" id="a_password_eye">Показать</button>
-            </div>
-          </div>
-          <button onclick="login()">Войти и получить токен</button>
-        </div>
-        <div>
-          <h3>Или вставить токен вручную</h3>
-          <div class="form-group"><label>Токен (без «Bearer»)</label><input id="a_token" type="text"></div>
-          <button onclick="setToken()">Сохранить токен</button>
-        </div>
+    <div class="auth-bar">
+      <div class="auth-status">
+        Статус прода: <span id="auth_state">проверяю...</span>
+        <button class="secondary small" id="logout_btn" onclick="logout()" style="display:none">Выйти</button>
+        <button class="secondary small" onclick="toggleAuthForms()">Войти / сменить токен</button>
       </div>
-      <div id="auth_result" class="result"></div>
+
+      <div id="auth_forms" style="display:none">
+        <div class="auth-cols">
+          <div>
+            <h3>Вход по логину/паролю</h3>
+            <div class="form-group"><label>Логин (user_name)</label><input id="a_user_name" type="text"></div>
+            <div class="form-group"><label>Пароль</label>
+              <div style="display:flex; gap:6px;">
+                <input id="a_password" type="password">
+                <button type="button" class="secondary small" onclick="togglePassword()" style="white-space:nowrap;" id="a_password_eye">Показать</button>
+              </div>
+            </div>
+            <button onclick="login()">Войти и получить токен</button>
+          </div>
+          <div>
+            <h3>Или вставить токен вручную</h3>
+            <div class="form-group"><label>Токен (без «Bearer»)</label><input id="a_token" type="text"></div>
+            <button onclick="setToken()">Сохранить токен</button>
+          </div>
+        </div>
+        <div id="auth_result" class="result"></div>
+      </div>
     </div>
-  </div>
 
   <div class="tabs">
     <div class="tab active" data-tab="categories" onclick="switchTab('categories')">Категории</div>
     <div class="tab" data-tab="products" onclick="switchTab('products')">Товары</div>
     <div class="tab" data-tab="limits" onclick="switchTab('limits')">Лимиты</div>
+    <div class="tab" data-tab="faq" onclick="switchTab('faq')">FAQ</div>
+    <div class="tab" data-tab="contacts" onclick="switchTab('contacts')">Контакты</div>
   </div>
 
-  <div class="panel active" id="panel-categories">
-    <div class="section">
-      <h2 id="c_form_title">Создать категорию</h2>
-      <div class="grid">  
-        <div class="form-group"><label>Название RU</label><input id="c_name_ru" type="text" onblur="translateNames('c')"></div>
-        <div class="form-group"><label>Название KK</label><input id="c_name_kk" type="text"></div>
-        <div class="form-group"><label>Название EN</label><input id="c_name_en" type="text"></div>
-        <div class="form-group">
-          <label>Marketplace ID</label>
-          <select id="c_marketplace_id" type="number">
-            <option value="">— выбери marketplace —</option>
-          </select>
+    <div class="panel active" id="panel-categories">
+      <div class="section">
+        <h2 id="c_form_title">Создать категорию</h2>
+        <div class="grid">  
+          <div class="form-group"><label>Название RU</label><input id="c_name_ru" type="text" onblur="translateNames('c')"></div>
+          <div class="form-group"><label>Название KK</label><input id="c_name_kk" type="text"></div>
+          <div class="form-group"><label>Название EN</label><input id="c_name_en" type="text"></div>
+          <div class="form-group">
+            <label>Marketplace ID</label>
+            <select id="c_marketplace_id" type="number">
+              <option value="">— выбери marketplace —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Institution IDs (через запятую: 1,2)</label>
+            <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+              <input type="checkbox" id="c_all_inst" checked onchange="toggleAllCatInstitutions()" style="width:auto;">
+              Во все учреждения (1–17)
+            </label>
+            <input id="c_institution_ids" type="text">
+          </div>
+          <div class="form-group"><label>Родительская категория (необязательно)</label><select id="c_parent_id" onchange="autoFillSortOrder()"><option value="">— верхний уровень —</option></select></div>
+          <div class="form-group"><label>Порядок сортировки</label><input id="c_sort_order" type="number"></div>
+          <div class="form-group">
+            <label>Изображение</label>
+            <img id="c_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
+            <input id="c_image" type="file" accept="image/*">
+            <div id="c_image_hint" class="hint" style="display:none;">Текущее фото сохранится. Загрузи новое, только если хочешь заменить.</div>
+          </div>
         </div>
-         <div class="form-group">
-          <label>Institution IDs (через запятую: 1,2)</label>
-          <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-            <input type="checkbox" id="c_all_inst" checked onchange="toggleAllCatInstitutions()" style="width:auto;">
-            Во все учреждения (1–17)
-          </label>
-          <input id="c_institution_ids" type="text">
-        </div>
-        <div class="form-group"><label>Родительская категория (необязательно)</label><select id="c_parent_id" onchange="autoFillSortOrder()"><option value="">— верхний уровень —</option></select></div>
-        <div class="form-group"><label>Порядок сортировки</label><input id="c_sort_order" type="number"></div>
-        <div class="form-group">
-          <label>Изображение</label>
-          <img id="c_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
-          <input id="c_image" type="file" accept="image/*">
-          <div id="c_image_hint" class="hint" style="display:none;">Текущее фото сохранится. Загрузи новое, только если хочешь заменить.</div>
-        </div>
+        <button id="c_save_btn" onclick="saveCategory()">Сохранить</button>
+        <button id="c_cancel_btn" class="secondary" onclick="cancelEditCategory()" style="display:none">Отмена</button>
+        <div id="c_result" class="result"></div>
       </div>
-      <button id="c_save_btn" onclick="saveCategory()">Сохранить</button>
-      <button id="c_cancel_btn" class="secondary" onclick="cancelEditCategory()" style="display:none">Отмена</button>
-      <div id="c_result" class="result"></div>
+
+      <div class="section">
+        <h2>Сохранённые категории</h2>
+        <div class="actions">
+          <button onclick="sendAllCategories()">Отправить всё</button>
+          <button class="secondary" onclick="resetCategories()">Сбросить статус</button>
+          <button class="secondary" onclick="loadCategories()">Обновить</button>
+        </div>
+        <div id="cat_result" class="result"></div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Фото</th><th>RU</th><th>Mkt</th><th>Parent</th><th>Прод-id</th><th>Статус</th><th></th></tr>
+          </thead>
+          <tbody id="cat_tbody"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="section">
-      <h2>Сохранённые категории</h2>
-      <div class="actions">
-        <button onclick="sendAllCategories()">Отправить всё</button>
-        <button class="secondary" onclick="resetCategories()">Сбросить статус</button>
-        <button class="secondary" onclick="loadCategories()">Обновить</button>
-      </div>
-      <div id="cat_result" class="result"></div>
-      <table>
-        <thead>
-          <tr><th>ID</th><th>Фото</th><th>RU</th><th>Mkt</th><th>Parent</th><th>Прод-id</th><th>Статус</th><th></th></tr>
-        </thead>
-        <tbody id="cat_tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-products">
-    <div class="section">
-      <h2 id="p_form_title">Создать товар</h2>
-      <div class="grid">
-        <div class="form-group"><label>Название RU</label><input id="p_name_ru" type="text" onblur="translateNames('p')"></div>
-        <div class="form-group"><label>Название KK</label><input id="p_name_kk" type="text"></div>
-        <div class="form-group"><label>Название EN</label><input id="p_name_en" type="text" onblur="autoFillSku()"></div>
-        <div class="form-group"><label>Описание RU (необязательно)</label><textarea id="p_description_ru" rows="2" onblur="translateDescriptions('p')"></textarea></div>
-        <div class="form-group"><label>Описание KK (необязательно)</label><textarea id="p_description_kk" rows="2"></textarea></div>
-        <div class="form-group"><label>Описание EN (необязательно)</label><textarea id="p_description_en" rows="2"></textarea></div>
-        <div class="form-group">
-          <label>Marketplace ID</label>
-          <select id="p_marketplace_id" type="number"></select>
-        </div>
-        <div class="form-group">
-          <label>Категория / Подкатегория</label>
-          <select id="p_category_id"><option value="">— выбери категорию —</option></select>
-        </div>
-        <div class="form-group">
-          <label>Institution IDs (через запятую: 1,2)</label>
-          <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
-            <input type="checkbox" id="p_all_inst" checked onchange="toggleAllInstitutions()" style="width:auto;">
-            Во все учреждения (1–17)
-          </label>
-          <input id="p_institution_ids" type="text">
-        </div>
-        <div class="form-group"><label>Цена</label><input id="p_price" type="number"></div>
-        <div class="form-group"><label>SKU (код товара)</label><input id="p_sku" type="text"></div>
-        <div class="form-group"><label>Остаток</label><input id="p_stock_quantity" type="number"></div>  
-        <div class="form-group">
-          <label>Лимит покупки (шаблон)</label>
-          <select id="p_purchase_limit_id" onchange="checkLimitSent()">
-            <option value="">— без лимита —</option>
-          </select>
-          <div id="p_limit_warn" class="hint" style="display:none; color:#c62828;">Этот лимит ещё не отправлен на прод — сначала отправь его во вкладке «Лимиты», иначе он не привяжется к товару.</div>
-         </div>
-         <div class="form-group">
-          <label>Тип товара</label>
-          <select id="p_product_type_id" type="number">
-            <option value="">— выбери тип товара —</option>
-          </select>
-        </div>
-        <div class="form-group"><label>Вес за единицу (weight_per_unit)</label><input id="p_weight_per_unit" type="number" step="any"></div>
- 
-        <div class="form-group">
-          <label>UOM ID (единица измерения)</label>
-          <select id="p_uom_id" type="number">
-            <option value="">— выбери единицу измерения —</option>
-      </select>
-        </div>
-        <div class="form-group">
-          <label>Изображение</label>
-          <img id="p_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
-          <input id="p_image" type="file" accept="image/*">
-          <div id="p_image_hint" class="hint" style="display:none;">Текущее фото сохранится. Загрузи новое, только если хочешь заменить.</div>
-        </div>
-      </div>
-      <button id="p_save_btn" onclick="saveProduct()">Сохранить</button>
-      <button id="p_cancel_btn" class="secondary" onclick="cancelEditProduct()" style="display:none">Отмена</button>
-      <div id="p_result" class="result"></div>
-    </div>
-
-    <div class="section">
-      <h2>Сохранённые товары</h2>
-      <div class="actions">
-        <button onclick="sendAllProducts()">Отправить всё</button>
-        <button class="secondary" onclick="resetProducts()">Сбросить статус</button>
-        <button class="secondary" onclick="loadProducts()">Обновить</button>
-      </div>
-      <div id="prod_result" class="result"></div>
-      <table>
-        <thead>
-          <tr><th>ID</th><th>Фото</th><th>RU</th><th>Cat</th><th>Цена</th><th>SKU</th><th>Статус</th><th></th></tr>
-        </thead>
-        <tbody id="prod_tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-limits">
-    <div class="section">
-      <h2 id="l_form_title">Создать шаблон лимита</h2>
-      <div class="grid">
-        <div class="form-group"><label>Название RU</label><input id="l_name_ru" type="text" onblur="translateNames('l')"></div>
-        <div class="form-group"><label>Название KK</label><input id="l_name_kk" type="text"></div>
-        <div class="form-group"><label>Название EN</label><input id="l_name_en" type="text"></div>
-        <div class="form-group">
-          <label>Marketplace ID</label>
-          <select id="l_marketplace_id"></select>
-        </div>
-        <div class="form-group"><label>Значение лимита за месяц</label><input id="l_limit_value" type="number" step="any"></div>
-        <div class="form-group">
-          <label>Единица измерения (limit_uom_id)</label>
-          <select id="l_limit_uom_id"><option value="">— выбери единицу измерения —</option></select>
-        </div>
-      </div>
-      <button id="l_save_btn" onclick="saveLimit()">Сохранить</button>
-      <button id="l_cancel_btn" class="secondary" onclick="cancelEditLimit()" style="display:none">Отмена</button>
-      <div id="l_result" class="result"></div>
-    </div>
-
-    <div class="section">
-      <h2>Сохранённые лимиты</h2>
-      <div class="actions">
-        <button onclick="sendAllLimits()">Отправить всё</button>
-        <button class="secondary" onclick="loadLimits()">Обновить</button>
-      </div>
-      <div id="lim_result" class="result"></div>
-      <table>
-        <thead>
-          <tr><th>ID</th><th>RU</th><th>Mkt</th><th>Значение</th><th>Ед.изм</th><th>Прод-id</th><th>Статус</th><th></th></tr>
-        </thead>
-        <tbody id="lim_tbody"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <script>
-    let categoriesData = [];
-    let productsData = [];
-    let limitsData = [];
-    let editCatId = null;
-    let editProdId = null;
-    let editLimitId = null;
-
-    const ALL_INSTITUTIONS = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17';
-
-    const PRODUCT_TYPES = [
-      { id: 1, name: 'Обычный' },
-      { id: 2, name: 'Скоропортящийся' },
-    ];
-
-    const UOMs = [
-      { id: 1, name: 'шт - Штук' },
-      { id: 2, name: 'кг - Килограммы' },
-      { id: 3, name: 'г - Граммы' },
-      { id: 4, name: 'л - Литры' },
-      { id: 5, name: 'блок - Блоки' },
-      { id: 6, name: 'упаковка - Упаковки' },
-      { id: 7, name: 'мл - Миллилитры' },
-    ];
-
-
-    const MARKETPLACES = [
-      { id: 1, name: 'Bromart Market' },
-      { id: 2, name: 'Bromart Цех' },
-    ];
-
-    function switchTab(name) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.getElementById('panel-' + name).classList.add('active');
-    }
-
-    async function translate(text, to) {
-      try {
-        const res = await fetch('/translate?to=' + to + '&text=' + encodeURIComponent(text));
-        const data = await res.json();
-        return data.text || '';
-      } catch (err) {
-        return '';
-      }
-    }
-
-    async function translateNames(prefix) {
-      const ru = document.getElementById(prefix + '_name_ru').value.trim();
-      if (!ru) return;
-      const kk = document.getElementById(prefix + '_name_kk');
-      const en = document.getElementById(prefix + '_name_en');
-      if (!kk.value) kk.value = await translate(ru, 'kk');
-      if (!en.value) en.value = await translate(ru, 'en');
-      if (prefix === 'p') autoFillSku();
-    }
-
-    async function translateDescriptions(prefix) {
-      const ru = document.getElementById(prefix + '_description_ru').value.trim();
-      if (!ru) return;
-      const kk = document.getElementById(prefix + '_description_kk');
-      const en = document.getElementById(prefix + '_description_en');
-      if (!kk.value) kk.value = await translate(ru, 'kk');
-      if (!en.value) en.value = await translate(ru, 'en');
-    }
-
-    
-
+    <div class="panel" id="panel-products">
+      <div class="section">
+        <h2 id="p_form_title">Создать товар</h2>
+        <div class="grid">
+          <div class="form-group"><label>Название RU</label><input id="p_name_ru" type="text" onblur="translateNames('p')"></div>
+          <div class="form-group"><label>Название KK</label><input id="p_name_kk" type="text"></div>
+          <div class="form-group"><label>Название EN</label><input id="p_name_en" type="text" onblur="autoFillSku()"></div>
+          <div class="form-group"><label>Описание RU (необязательно)</label><textarea id="p_description_ru" rows="2" onblur="translateDescriptions('p')"></textarea></div>
+          <div class="form-group"><label>Описание KK (необязательно)</label><textarea id="p_description_kk" rows="2"></textarea></div>
+          <div class="form-group"><label>Описание EN (необязательно)</label><textarea id="p_description_en" rows="2"></textarea></div>
+          <div class="form-group">
+            <label>Marketplace ID</label>
+            <select id="p_marketplace_id" type="number"></select>
+          </div>
+          <div class="form-group">
+            <label>Категория / Подкатегория</label>
+            <select id="p_category_id"><option value="">— выбери категорию —</option></select>
+          </div>
+          <div class="form-group">
+            <label>Institution IDs (через запятую: 1,2)</label>
+            <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+              <input type="checkbox" id="p_all_inst" checked onchange="toggleAllInstitutions()" style="width:auto;">
+              Во все учреждения (1–17)
+            </label>
+            <input id="p_institution_ids" type="text">
+          </div>
+          <div class="form-group"><label>Цена</label><input id="p_price" type="number"></div>
+          <div class="form-group"><label>SKU (код товара)</label><input id="p_sku" type="text"></div>
+          <div class="form-group"><label>Остаток</label><input id="p_stock_quantity" type="number"></div>  
+          <div class="form-group">
+            <label>Лимит покупки (шаблон)</label>
+            <select id="p_purchase_limit_id" onchange="checkLimitSent()">
+              <option value="">— без лимита —</option>
+            </select>
+            <div id="p_limit_warn" class="hint" style="display:none; color:#c62828;">Этот лимит ещё не отправлен на прод — сначала отправь его во вкладке «Лимиты», иначе он не привяжется к товару.</div>
+          </div>
+          <div class="form-group">
+            <label>Тип товара</label>
+            <select id="p_product_type_id" type="number">
+              <option value="">— выбери тип товара —</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Вес за единицу (weight_per_unit)</label><input id="p_weight_per_unit" type="number" step="any"></div>
   
-    function generateSku(name) {
-      const base = (name || '').trim().toUpperCase()
-        .replace(/[^A-Z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 24);
-      if (!base) return '';
-      const suffix = Date.now().toString(36).slice(-4).toUpperCase();
-      return base + '-' + suffix;
-    }
+          <div class="form-group">
+            <label>UOM ID (единица измерения)</label>
+            <select id="p_uom_id" type="number">
+              <option value="">— выбери единицу измерения —</option>
+        </select>
+          </div>
+          <div class="form-group">
+            <label>Изображение</label>
+            <img id="p_image_current" style="display:none; max-height:80px; margin-bottom:6px; border:1px solid #ccc; border-radius:4px;">
+            <input id="p_image" type="file" accept="image/*">
+            <div id="p_image_hint" class="hint" style="display:none;">Текущее фото сохранится. Загрузи новое, только если хочешь заменить.</div>
+          </div>
+        </div>
+        <button id="p_save_btn" onclick="saveProduct()">Сохранить</button>
+        <button id="p_cancel_btn" class="secondary" onclick="cancelEditProduct()" style="display:none">Отмена</button>
+        <div id="p_result" class="result"></div>
+      </div>
 
-    function autoFillSku() {
-      if (!p_sku.value) p_sku.value = generateSku(p_name_en.value);
-    }
+      <div class="section">
+        <h2>Сохранённые товары</h2>
+        <div class="actions">
+          <button onclick="sendAllProducts()">Отправить всё</button>
+          <button class="secondary" onclick="resetProducts()">Сбросить статус</button>
+          <button class="secondary" onclick="loadProducts()">Обновить</button>
+        </div>
+        <div id="prod_result" class="result"></div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Фото</th><th>RU</th><th>Cat</th><th>Цена</th><th>SKU</th><th>Статус</th><th></th></tr>
+          </thead>
+          <tbody id="prod_tbody"></tbody>
+        </table>
+      </div>
+    </div>
 
-    function show(id, data, ok) {
-      const el = document.getElementById(id);
-      el.className = 'result ' + (ok ? 'success' : 'error');
-      el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-    }
+    <div class="panel" id="panel-limits">
+      <div class="section">
+        <h2 id="l_form_title">Создать шаблон лимита</h2>
+        <div class="grid">
+          <div class="form-group"><label>Название RU</label><input id="l_name_ru" type="text" onblur="translateNames('l')"></div>
+          <div class="form-group"><label>Название KK</label><input id="l_name_kk" type="text"></div>
+          <div class="form-group"><label>Название EN</label><input id="l_name_en" type="text"></div>
+          <div class="form-group">
+            <label>Marketplace ID</label>
+            <select id="l_marketplace_id"></select>
+          </div>
+          <div class="form-group"><label>Значение лимита за месяц</label><input id="l_limit_value" type="number" step="any"></div>
+          <div class="form-group">
+            <label>Единица измерения (limit_uom_id)</label>
+            <select id="l_limit_uom_id"><option value="">— выбери единицу измерения —</option></select>
+          </div>
+        </div>
+        <button id="l_save_btn" onclick="saveLimit()">Сохранить</button>
+        <button id="l_cancel_btn" class="secondary" onclick="cancelEditLimit()" style="display:none">Отмена</button>
+        <div id="l_result" class="result"></div>
+      </div>
 
-    function errText(data) {
-      if (data && data.detail) {
-        if (data.detail.message) return data.detail.message + (data.detail.code ? ' (' + data.detail.code + ')' : '');
-        if (typeof data.detail === 'string') return data.detail;
+      <div class="section">
+        <h2>Сохранённые лимиты</h2>
+        <div class="actions">
+          <button onclick="sendAllLimits()">Отправить всё</button>
+          <button class="secondary" onclick="loadLimits()">Обновить</button>
+        </div>
+        <div id="lim_result" class="result"></div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>RU</th><th>Mkt</th><th>Значение</th><th>Ед.изм</th><th>Прод-id</th><th>Статус</th><th></th></tr>
+          </thead>
+          <tbody id="lim_tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  <div class="panel" id="panel-faq">
+    <div class="section">
+      <h2 id="fc_form_title">FAQ Categories</h2>
+      <div class="grid">
+        <div class="form-group"><label>Название RU</label><input id="fc_name_ru" type="text" onblur="translateFaqCategoryName()"></div>
+        <div class="form-group"><label>Название KK</label><input id="fc_name_kk" type="text"></div>
+        <div class="form-group"><label>Название EN</label><input id="fc_name_en" type="text"></div>
+        <div class="form-group"><label>Sort Order</label><input id="fc_sort_order" type="number"></div>
+      </div>
+      <button id="fc_save_btn" onclick="saveFaqCategory()">Сохранить</button>
+      <button id="fc_cancel_btn" class="secondary" onclick="cancelEditFaqCategory()" style="display:none">Отмена</button>
+      <div id="fc_result" class="result"></div>
+    </div>
+
+    <div class="section">
+      <h2>Сохранённые FAQ Categories</h2>
+      <div class="actions">
+        <button onclick="sendAllFaqCategories()">Отправить всё</button>
+        <button class="secondary" onclick="loadFaqCategories()">Обновить</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Название RU</th><th>Prod ID</th><th>Sent</th><th></th></tr>
+        </thead>
+        <tbody id="faq_cat_tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2 id="f_form_title">Создать статью FAQ</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label>FAQ Category</label>
+          <select id="f_category_id"><option value="">— без категории —</option></select>
+        </div>
+        <div class="form-group">
+          <label>Глобальная</label>
+          <input id="f_is_global" type="checkbox" style="width:auto;">
+        </div>
+        <div class="form-group">
+          <label>Institution IDs (через запятую)</label>
+          <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <input type="checkbox" id="f_all_inst" checked onchange="toggleAllFaqInstitutions()" style="width:auto;">
+            Во все учреждения (1–17)
+          </label>
+          <input id="f_institution_ids" type="text">
+        </div>
+        <div class="form-group"><label>Порядок сортировки</label><input id="f_sort_order" type="number"></div>
+        <div class="form-group"><label>Заголовок RU</label><input id="f_title_ru" type="text" onblur="translateFaqTitle()"></div>
+        <div class="form-group"><label>Заголовок KK</label><input id="f_title_kk" type="text"></div>
+        <div class="form-group"><label>Заголовок EN</label><input id="f_title_en" type="text"></div>
+        <div class="form-group"><label>Текст RU</label><textarea id="f_body_ru" rows="4" onblur="translateFaqBody()"></textarea></div>
+        <div class="form-group"><label>Текст KK</label><textarea id="f_body_kk" rows="4"></textarea></div>
+        <div class="form-group"><label>Текст EN</label><textarea id="f_body_en" rows="4"></textarea></div>
+      </div>
+      <button id="f_save_btn" onclick="saveFaq()">Сохранить</button>
+      <button id="f_cancel_btn" class="secondary" onclick="cancelEditFaq()" style="display:none">Отмена</button>
+      <div id="f_result" class="result"></div>
+    </div>
+
+    <div class="section">
+      <h2>Статьи FAQ</h2>
+      <div class="actions">
+        <button onclick="sendAllFaq()">Отправить всё</button>
+        <button class="secondary" onclick="loadFaq()">Обновить</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Title RU</th><th>Prod ID</th><th>Sent</th><th></th></tr>
+        </thead>
+        <tbody id="faq_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-contacts">
+    <div class="section">
+      <h2 id="ct_form_title">Создать контакт</h2>
+      <div class="grid">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="ct_type">
+            <option value="phone">phone</option>
+            <option value="whatsapp">whatsapp</option>
+            <option value="email">email</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Value</label><input id="ct_value" type="text"></div>
+        <div class="form-group"><label>Label RU</label><input id="ct_label_ru" type="text" onblur="translateContactLabel()"></div>
+        <div class="form-group"><label>Label KK</label><input id="ct_label_kk" type="text"></div>
+        <div class="form-group"><label>Label EN</label><input id="ct_label_en" type="text"></div>
+        <div class="form-group"><label>Active</label><input id="ct_is_active" type="checkbox" checked style="width:auto;"></div>
+        <div class="form-group"><label>Global</label><input id="ct_is_global" type="checkbox" style="width:auto;"></div>
+        <div class="form-group">
+          <label>Institution IDs (через запятую)</label>
+          <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+            <input type="checkbox" id="ct_all_inst" checked onchange="toggleAllContactInstitutions()" style="width:auto;">
+            Во все учреждения (1–17)
+          </label>
+          <input id="ct_institution_ids" type="text">
+        </div>
+        <div class="form-group"><label>Sort Order</label><input id="ct_sort_order" type="number"></div>
+      </div>
+      <button id="ct_save_btn" onclick="saveContact()">Сохранить</button>
+      <button id="ct_cancel_btn" class="secondary" onclick="cancelEditContact()" style="display:none">Отмена</button>
+      <div id="ct_result" class="result"></div>
+    </div>
+
+    <div class="section">
+      <h2>Контакты</h2>
+      <div class="actions">
+        <button onclick="sendAllContacts()">Отправить всё</button>
+        <button class="secondary" onclick="loadContacts()">Обновить</button>
+      </div>
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Type</th><th>Value</th><th>Prod ID</th><th>Sent</th><th></th></tr>
+        </thead>
+        <tbody id="contact_tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  
+    <script>
+      let categoriesData = [];
+      let productsData = [];
+      let limitsData = [];
+      let editCatId = null;
+      let editProdId = null;
+      let editLimitId = null;
+      let editFaqId = null;
+      let editContactId = null;
+
+      const ALL_INSTITUTIONS = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17';
+
+      const PRODUCT_TYPES = [
+        { id: 1, name: 'Обычный' },
+        { id: 2, name: 'Скоропортящийся' },
+      ];
+      
+      let faqData = [];
+      let contactsData = [];
+      let faqCategoriesData = [];
+      let editFaqCategoryId = null;
+
+
+      const UOMs = [
+        { id: 1, name: 'шт - Штук' },
+        { id: 2, name: 'кг - Килограммы' },
+        { id: 3, name: 'г - Граммы' },
+        { id: 4, name: 'л - Литры' },
+        { id: 5, name: 'блок - Блоки' },
+        { id: 6, name: 'упаковка - Упаковки' },
+        { id: 7, name: 'мл - Миллилитры' },
+      ];
+
+
+      const MARKETPLACES = [
+        { id: 1, name: 'Bromart Market' },
+        { id: 2, name: 'Bromart Цех' },
+      ];
+
+      function switchTab(name) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + name).classList.add('active');
       }
-      if (data && data.message) return data.message;
-      return typeof data === 'string' ? data : JSON.stringify(data);
-    }
 
-    function showResult(id, data) {
-      show(id, data.success ? (data.message || 'Готово') : errText(data), data.success);
-    }
-
-    function summarizeResults(id, data) {
-      if (!data.results) { showResult(id, data); return; }
-      const fail = data.results.filter(r => !r.success);
-      const ok = data.results.length - fail.length;
-      let txt = 'Отправлено: ' + ok + ' из ' + data.results.length;
-      if (fail.length) {
-        txt += '\nОшибки:';
-        for (const f of fail) txt += '\n  #' + f.id + ': ' + (f.message || f.error);
-      }
-      show(id, txt, fail.length === 0);
-    }
-
-    function setVal(id, v) {
-      document.getElementById(id).value = (v == null ? '' : v);
-    }
-
-    function statusBadge(sent) {
-      return sent ? 'отправлено' : 'не отправлено';
-    }
-
-    function toggleAllInstitutions() {
-      if (p_all_inst.checked) {
-        p_institution_ids.value = ALL_INSTITUTIONS;
-        p_institution_ids.disabled = true;
-      } else {
-        p_institution_ids.disabled = false;
-      }
-    }
-
-    function populateTypesProduct() {
-      const options = PRODUCT_TYPES.map(t => `<option value="${t.id}">${t.name} (id ${t.id})</option>`).join('');
-      p_product_type_id.innerHTML = '<option value="">— выбери тип товара —</option>' + options;
-    }
-
-    function populateUOMs() {
-      const options = UOMs.map(u => `<option value="${u.id}">${u.name} (id ${u.id})</option>`).join('');
-      p_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
-      l_limit_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
-    }
-
-    function uomName(id) {
-      const u = UOMs.find(x => x.id === Number(id));
-      return u ? u.name : (id || '');
-    }
-
-    function populateProductLimits() {
-      const keep = p_purchase_limit_id.value;
-      const options = limitsData.map(l => `<option value="${l.id}">${l.name_ru || ('id ' + l.id)} — ${l.limit_value} ${uomName(l.limit_uom_id)}</option>`).join('');
-      p_purchase_limit_id.innerHTML = '<option value="">— без лимита —</option>' + options;
-      p_purchase_limit_id.value = keep;
-      checkLimitSent();
-    }
-
-    function checkLimitSent() {
-      const id = Number(p_purchase_limit_id.value);
-      const limit = limitsData.find(l => l.id === id);
-      p_limit_warn.style.display = (limit && !limit.sent) ? '' : 'none';
-    }
-
-    function toggleAllCatInstitutions() {
-      if (c_all_inst.checked) {
-        c_institution_ids.value = ALL_INSTITUTIONS;
-        c_institution_ids.disabled = true;
-      } else {
-        c_institution_ids.disabled = false;
-      }
-    }
-
-    function imgCell(url) {
-      return url ? `<img src="${url}" style="max-height:40px; border-radius:4px;">` : '';
-    }
-
-    function showCurrentImage(prefix, url) {
-      const img = document.getElementById(prefix + '_image_current');
-      const hint = document.getElementById(prefix + '_image_hint');
-      if (url) {
-        img.src = url;
-        img.style.display = '';
-        hint.style.display = '';
-      } else {
-        img.removeAttribute('src');
-        img.style.display = 'none';
-        hint.style.display = 'none';
-      }
-    }
-
-    function populateMarketplaces() {
-      const options = MARKETPLACES.map(m => `<option value="${m.id}">${m.name} (id ${m.id})</option>`).join('');
-      p_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
-      c_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
-      l_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
-    }
-
-    function catName(c) {
-      return c.name_ru || c.name_kk || c.name_en || ('id ' + c.id);
-    }
-
-    function populateProductCategories() {
-      const keep = p_category_id.value;
-      const tops = categoriesData.filter(c => !c.parent_id);
-      let html = '<option value="">— выбери категорию —</option>';
-      for (const top of tops) {
-        html += `<option value="${top.id}">${catName(top)} (id ${top.id})</option>`;
-        for (const sub of categoriesData.filter(c => c.parent_id === top.id)) {
-          html += `<option value="${sub.id}">${catName(top)} → ${catName(sub)} (id ${sub.id})</option>`;
+      async function translate(text, to) {
+        try {
+          const res = await fetch('/translate?to=' + to + '&text=' + encodeURIComponent(text));
+          const data = await res.json();
+          return data.text || '';
+        } catch (err) {
+          return '';
         }
       }
-      p_category_id.innerHTML = html;
-      p_category_id.value = keep;
-    }
 
-    function selectProductCategory(catId) {
-      p_category_id.value = (catId == null ? '' : catId);
-    }
+      async function translateNames(prefix) {
+        const ru = document.getElementById(prefix + '_name_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById(prefix + '_name_kk');
+        const en = document.getElementById(prefix + '_name_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+        if (prefix === 'p') autoFillSku();
+      }
 
-    async function saveCategory() {
-      const form = new FormData();
-      form.append('name_kk', c_name_kk.value);
-      form.append('name_ru', c_name_ru.value);
-      form.append('name_en', c_name_en.value);
-      form.append('marketplace_id', c_marketplace_id.value);
-      form.append('institution_ids', c_institution_ids.value);
-      if (c_parent_id.value) form.append('parent_id', c_parent_id.value);
-      if (c_sort_order.value) form.append('sort_order', c_sort_order.value);
-      if (c_image.files[0]) form.append('image', c_image.files[0]);
-      const url = editCatId ? '/update-category/' + editCatId : '/save-category';
-      try {
-        const res = await fetch(url, { method: 'POST', body: form });
-        const data = await res.json();
-        show('c_result', data.message || data, data.success);
-        if (data.success) { cancelEditCategory(); loadCategories(); }
-      } catch (err) { show('c_result', err.message, false); }
-    }
+      async function translateDescriptions(prefix) {
+        const ru = document.getElementById(prefix + '_description_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById(prefix + '_description_kk');
+        const en = document.getElementById(prefix + '_description_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+      }
 
-    function editCategory(id) {
-      const c = categoriesData.find(x => x.id === id);
-      if (!c) return;
-      editCatId = id;
-      setVal('c_name_kk', c.name_kk);
-      setVal('c_name_ru', c.name_ru);
-      setVal('c_name_en', c.name_en);
-      setVal('c_marketplace_id', c.marketplace_id);
-      setVal('c_institution_ids', c.institution_ids);
-      c_all_inst.checked = (String(c.institution_ids || '') === ALL_INSTITUTIONS);
+      
+      
+      async function translateFaqTitle() {
+        const ru = document.getElementById('f_title_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById('f_title_kk');
+        const en = document.getElementById('f_title_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+      }
+
+      async function translateFaqBody() {
+        const ru = document.getElementById('f_body_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById('f_body_kk');
+        const en = document.getElementById('f_body_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+      }
+
+      async function translateFaqCategoryName() {
+        const ru = document.getElementById('fc_name_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById('fc_name_kk');
+        const en = document.getElementById('fc_name_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+      }
+
+      async function translateContactLabel() {
+        const ru = document.getElementById('ct_label_ru').value.trim();
+        if (!ru) return;
+        const kk = document.getElementById('ct_label_kk');
+        const en = document.getElementById('ct_label_en');
+        if (!kk.value) kk.value = await translate(ru, 'kk');
+        if (!en.value) en.value = await translate(ru, 'en');
+      }
+
+      function toggleAllFaqInstitutions() {
+        if (f_all_inst.checked) {
+          f_institution_ids.value = ALL_INSTITUTIONS;
+          f_institution_ids.disabled = true;
+        } else {
+          f_institution_ids.disabled = false;
+        }
+      }
+
+      function toggleAllContactInstitutions() {
+        if (ct_all_inst.checked) {
+          ct_institution_ids.value = ALL_INSTITUTIONS;
+          ct_institution_ids.disabled = true;
+        } else {
+          ct_institution_ids.disabled = false;
+        }
+      }
+
+      function populateFaqCategoryOptions() {
+        const keep = f_category_id.value;
+        const options = faqCategoriesData.map(c => {
+          const val = c.prod_id != null ? c.prod_id : '';
+          return `<option value="${val}" ${val === '' ? 'disabled' : ''}>${c.name_ru || c.name_kk || c.name_en || ('id ' + c.id)}${val ? ' (prod ' + val + ')' : ' (не отправлена)'}</option>`;
+        }).join('');
+        f_category_id.innerHTML = '<option value="">— без категории —</option>' + options;
+        f_category_id.value = keep;
+      }
+
+      function resetFaqForm() {
+        editFaqId = null;
+        document.querySelectorAll('#panel-faq input, #panel-faq textarea, #panel-faq select').forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.value = '';
+          }
+        });
+        f_is_global.checked = false;
+        f_all_inst.checked = true;
+        toggleAllFaqInstitutions();
+        f_category_id.value = '';
+        f_form_title.textContent = 'Создать статью FAQ';
+        f_save_btn.textContent = 'Сохранить';
+        f_cancel_btn.style.display = 'none';
+      }
+
+      function resetContactForm() {
+        editContactId = null;
+        document.querySelectorAll('#panel-contacts input, #panel-contacts textarea, #panel-contacts select').forEach(el => {
+          if (el.type === 'checkbox') {
+            el.checked = false;
+          } else {
+            el.value = '';
+          }
+        });
+        ct_type.value = 'phone';
+        ct_is_active.checked = true;
+        ct_all_inst.checked = true;
+        toggleAllContactInstitutions();
+        ct_form_title.textContent = 'Создать контакт';
+        ct_save_btn.textContent = 'Сохранить';
+        ct_cancel_btn.style.display = 'none';
+      }
+
+      async function saveFaqCategory() {
+        const body = {
+          name_ru: fc_name_ru.value.trim(),
+          name_kk: fc_name_kk.value.trim(),
+          name_en: fc_name_en.value.trim(),
+          sort_order: fc_sort_order.value,
+        };
+        const url = editFaqCategoryId ? '/faq-category/' + editFaqCategoryId : '/faq-category';
+        const method = editFaqCategoryId ? 'PUT' : 'POST';
+        try {
+          const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await res.json();
+          show('fc_result', data.message || data, data.success);
+          if (data.success) { cancelEditFaqCategory(); loadFaqCategories(); }
+        } catch (err) { show('fc_result', err.message, false); }
+      }
+
+      function editFaqCategory(id) {
+        const item = faqCategoriesData.find(x => x.id === id);
+        if (!item) return;
+        editFaqCategoryId = id;
+        setVal('fc_name_ru', item.name_ru);
+        setVal('fc_name_kk', item.name_kk);
+        setVal('fc_name_en', item.name_en);
+        setVal('fc_sort_order', item.sort_order);
+        fc_form_title.textContent = 'Редактировать FAQ Category #' + id;
+        fc_save_btn.textContent = 'Обновить';
+        fc_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEditFaqCategory() {
+        editFaqCategoryId = null;
+        document.querySelectorAll('#panel-faq #fc_name_ru, #panel-faq #fc_name_kk, #panel-faq #fc_name_en, #panel-faq #fc_sort_order').forEach(i => i.value = '');
+        fc_form_title.textContent = 'FAQ Categories';
+        fc_save_btn.textContent = 'Сохранить';
+        fc_cancel_btn.style.display = 'none';
+      }
+
+      async function sendFaqCategory(id) {
+        try {
+          const res = await fetch('/send-faq-category/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('fc_result', data);
+        } catch (err) { show('fc_result', err.message, false); }
+        loadFaqCategories();
+      }
+
+      async function sendAllFaqCategories() {
+        try {
+          const res = await fetch('/send-all-faq-categories', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('fc_result', data);
+        } catch (err) { show('fc_result', err.message, false); }
+        loadFaqCategories();
+      }
+
+      async function deleteFaqCategory(id) {
+        if (!confirm('Удалить FAQ Category #' + id + '?')) return;
+        try {
+          const res = await fetch('/faq-category/' + id, { method: 'DELETE' });
+          const data = await res.json();
+          show('fc_result', data.message || data, data.success);
+        } catch (err) { show('fc_result', err.message, false); }
+        loadFaqCategories();
+      }
+
+      async function loadFaqCategories() {
+        const res = await fetch('/faq-categories');
+        faqCategoriesData = await res.json();
+        faq_cat_tbody.innerHTML = faqCategoriesData.map(c => `
+          <tr>
+            <td>${c.id}</td>
+            <td>${c.name_ru || ''}</td>
+            <td>${c.prod_id || ''}</td>
+            <td>${statusBadge(c.sent)}</td>
+            <td>
+              <button class="small" onclick="sendFaqCategory(${c.id})">Отправить</button>
+              <button class="small secondary" onclick="editFaqCategory(${c.id})">Изменить</button>
+              <button class="small danger" onclick="deleteFaqCategory(${c.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+        populateFaqCategoryOptions();
+      }
+
+      async function saveFaq() {
+        const body = {
+          category_id: f_category_id.value || null,
+          title_ru: f_title_ru.value.trim(),
+          title_kk: f_title_kk.value.trim(),
+          title_en: f_title_en.value.trim(),
+          body_ru: f_body_ru.value.trim(),
+          body_kk: f_body_kk.value.trim(),
+          body_en: f_body_en.value.trim(),
+          is_global: f_is_global.checked,
+          institution_ids: f_institution_ids.value.trim(),
+          sort_order: f_sort_order.value,
+        };
+        const url = editFaqId ? '/faq/' + editFaqId : '/faq/article';
+        const method = editFaqId ? 'PUT' : 'POST';
+        try {
+          const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await res.json();
+          show('f_result', data.message || data, data.success);
+          if (data.success) { resetFaqForm(); loadFaq(); }
+        } catch (err) { show('f_result', err.message, false); }
+      }
+
+      async function saveContact() {
+        const body = {
+          type: ct_type.value,
+          value: ct_value.value.trim(),
+          label_ru: ct_label_ru.value.trim(),
+          label_kk: ct_label_kk.value.trim(),
+          label_en: ct_label_en.value.trim(),
+          is_active: ct_is_active.checked,
+          is_global: ct_is_global.checked,
+          institution_ids: ct_institution_ids.value.trim(),
+          sort_order: ct_sort_order.value,
+        };
+        const url = editContactId ? '/contact/' + editContactId : '/contact';
+        const method = editContactId ? 'PUT' : 'POST';
+        try {
+          const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await res.json();
+          show('ct_result', data.message || data, data.success);
+          if (data.success) { resetContactForm(); loadContacts(); }
+        } catch (err) { show('ct_result', err.message, false); }
+      }
+
+      function editFaq(id) {
+        const item = faqData.find(x => x.id === id);
+        if (!item) return;
+        editFaqId = id;
+        setVal('f_category_id', item.category_id);
+        f_is_global.checked = !!item.is_global;
+        setVal('f_institution_ids', item.institution_ids);
+        f_all_inst.checked = (String(item.institution_ids || '') === ALL_INSTITUTIONS);
+        toggleAllFaqInstitutions();
+        setVal('f_sort_order', item.sort_order);
+        setVal('f_title_ru', item.title_ru);
+        setVal('f_title_kk', item.title_kk);
+        setVal('f_title_en', item.title_en);
+        setVal('f_body_ru', item.body_ru);
+        setVal('f_body_kk', item.body_kk);
+        setVal('f_body_en', item.body_en);
+        f_form_title.textContent = 'Редактировать FAQ #' + id;
+        f_save_btn.textContent = 'Обновить';
+        f_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function editContact(id) {
+        const item = contactsData.find(x => x.id === id);
+        if (!item) return;
+        editContactId = id;
+        setVal('ct_type', item.type);
+        setVal('ct_value', item.value);
+        setVal('ct_label_ru', item.label_ru);
+        setVal('ct_label_kk', item.label_kk);
+        setVal('ct_label_en', item.label_en);
+        ct_is_active.checked = !!item.is_active;
+        ct_is_global.checked = !!item.is_global;
+        setVal('ct_institution_ids', item.institution_ids);
+        ct_all_inst.checked = (String(item.institution_ids || '') === ALL_INSTITUTIONS);
+        toggleAllContactInstitutions();
+        setVal('ct_sort_order', item.sort_order);
+        ct_form_title.textContent = 'Редактировать контакт #' + id;
+        ct_save_btn.textContent = 'Обновить';
+        ct_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEditFaq() { resetFaqForm(); }
+      function cancelEditContact() { resetContactForm(); }
+    
+      function generateSku(name) {
+        const base = (name || '').trim().toUpperCase()
+          .replace(/[^A-Z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 24);
+        if (!base) return '';
+        const suffix = Date.now().toString(36).slice(-4).toUpperCase();
+        return base + '-' + suffix;
+      }
+
+      function autoFillSku() {
+        if (!p_sku.value) p_sku.value = generateSku(p_name_en.value);
+      }
+
+      function show(id, data, ok) {
+        const el = document.getElementById(id);
+        el.className = 'result ' + (ok ? 'success' : 'error');
+        el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      }
+
+      function errText(data) {
+        if (data && data.detail) {
+          if (data.detail.message) return data.detail.message + (data.detail.code ? ' (' + data.detail.code + ')' : '');
+          if (typeof data.detail === 'string') return data.detail;
+        }
+        if (data && data.message) return data.message;
+        return typeof data === 'string' ? data : JSON.stringify(data);
+      }
+
+      function showResult(id, data) {
+        show(id, data.success ? (data.message || 'Готово') : errText(data), data.success);
+      }
+
+      function summarizeResults(id, data) {
+        if (!data.results) { showResult(id, data); return; }
+        const fail = data.results.filter(r => !r.success);
+        const ok = data.results.length - fail.length;
+        let txt = 'Отправлено: ' + ok + ' из ' + data.results.length;
+        if (fail.length) {
+          txt += '\nОшибки:';
+          for (const f of fail) txt += '\n  #' + f.id + ': ' + (f.message || f.error);
+        }
+        show(id, txt, fail.length === 0);
+      }
+
+      function setVal(id, v) {
+        document.getElementById(id).value = (v == null ? '' : v);
+      }
+
+      function statusBadge(sent) {
+        return sent ? 'отправлено' : 'не отправлено';
+      }
+
+      function toggleAllInstitutions() {
+        if (p_all_inst.checked) {
+          p_institution_ids.value = ALL_INSTITUTIONS;
+          p_institution_ids.disabled = true;
+        } else {
+          p_institution_ids.disabled = false;
+        }
+      }
+
+      function populateTypesProduct() {
+        const options = PRODUCT_TYPES.map(t => `<option value="${t.id}">${t.name} (id ${t.id})</option>`).join('');
+        p_product_type_id.innerHTML = '<option value="">— выбери тип товара —</option>' + options;
+      }
+
+      function populateUOMs() {
+        const options = UOMs.map(u => `<option value="${u.id}">${u.name} (id ${u.id})</option>`).join('');
+        p_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
+        l_limit_uom_id.innerHTML = '<option value="">— выбери единицу измерения —</option>' + options;
+      }
+
+      function uomName(id) {
+        const u = UOMs.find(x => x.id === Number(id));
+        return u ? u.name : (id || '');
+      }
+
+      function populateProductLimits() {
+        const keep = p_purchase_limit_id.value;
+        const options = limitsData.map(l => `<option value="${l.id}">${l.name_ru || ('id ' + l.id)} — ${l.limit_value} ${uomName(l.limit_uom_id)}</option>`).join('');
+        p_purchase_limit_id.innerHTML = '<option value="">— без лимита —</option>' + options;
+        p_purchase_limit_id.value = keep;
+        checkLimitSent();
+      }
+
+      function checkLimitSent() {
+        const id = Number(p_purchase_limit_id.value);
+        const limit = limitsData.find(l => l.id === id);
+        p_limit_warn.style.display = (limit && !limit.sent) ? '' : 'none';
+      }
+
+      function toggleAllCatInstitutions() {
+        if (c_all_inst.checked) {
+          c_institution_ids.value = ALL_INSTITUTIONS;
+          c_institution_ids.disabled = true;
+        } else {
+          c_institution_ids.disabled = false;
+        }
+      }
+
+      function imgCell(url) {
+        return url ? `<img src="${url}" style="max-height:40px; border-radius:4px;">` : '';
+      }
+
+      function showCurrentImage(prefix, url) {
+        const img = document.getElementById(prefix + '_image_current');
+        const hint = document.getElementById(prefix + '_image_hint');
+        if (url) {
+          img.src = url;
+          img.style.display = '';
+          hint.style.display = '';
+        } else {
+          img.removeAttribute('src');
+          img.style.display = 'none';
+          hint.style.display = 'none';
+        }
+      }
+
+      function populateMarketplaces() {
+        const options = MARKETPLACES.map(m => `<option value="${m.id}">${m.name} (id ${m.id})</option>`).join('');
+        p_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
+        c_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
+        l_marketplace_id.innerHTML = '<option value="">— выбери маркетплейс —</option>' + options;
+      }
+
+      function catName(c) {
+        return c.name_ru || c.name_kk || c.name_en || ('id ' + c.id);
+      }
+
+      function populateProductCategories() {
+        const keep = p_category_id.value;
+        const tops = categoriesData.filter(c => !c.parent_id);
+        let html = '<option value="">— выбери категорию —</option>';
+        for (const top of tops) {
+          html += `<option value="${top.id}">${catName(top)} (id ${top.id})</option>`;
+          for (const sub of categoriesData.filter(c => c.parent_id === top.id)) {
+            html += `<option value="${sub.id}">${catName(top)} → ${catName(sub)} (id ${sub.id})</option>`;
+          }
+        }
+        p_category_id.innerHTML = html;
+        p_category_id.value = keep;
+      }
+
+      function selectProductCategory(catId) {
+        p_category_id.value = (catId == null ? '' : catId);
+      }
+
+      async function saveCategory() {
+        const form = new FormData();
+        form.append('name_kk', c_name_kk.value);
+        form.append('name_ru', c_name_ru.value);
+        form.append('name_en', c_name_en.value);
+        form.append('marketplace_id', c_marketplace_id.value);
+        form.append('institution_ids', c_institution_ids.value);
+        if (c_parent_id.value) form.append('parent_id', c_parent_id.value);
+        if (c_sort_order.value) form.append('sort_order', c_sort_order.value);
+        if (c_image.files[0]) form.append('image', c_image.files[0]);
+        const url = editCatId ? '/update-category/' + editCatId : '/save-category';
+        try {
+          const res = await fetch(url, { method: 'POST', body: form });
+          const data = await res.json();
+          show('c_result', data.message || data, data.success);
+          if (data.success) { cancelEditCategory(); loadCategories(); }
+        } catch (err) { show('c_result', err.message, false); }
+      }
+
+      function editCategory(id) {
+        const c = categoriesData.find(x => x.id === id);
+        if (!c) return;
+        editCatId = id;
+        setVal('c_name_kk', c.name_kk);
+        setVal('c_name_ru', c.name_ru);
+        setVal('c_name_en', c.name_en);
+        setVal('c_marketplace_id', c.marketplace_id);
+        setVal('c_institution_ids', c.institution_ids);
+        c_all_inst.checked = (String(c.institution_ids || '') === ALL_INSTITUTIONS);
+        toggleAllCatInstitutions();
+        setVal('c_parent_id', c.parent_id);
+        setVal('c_sort_order', c.sort_order);
+        c_image.value = '';
+        showCurrentImage('c', c.image_name ? '/category-image/' + id : null);
+        c_form_title.textContent = 'Редактировать категорию #' + id;
+        c_save_btn.textContent = 'Обновить';
+        c_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEditCategory() {
+        editCatId = null;
+        document.querySelectorAll('#panel-categories input').forEach(i => i.value = '');
+        c_all_inst.checked = true;
+        toggleAllCatInstitutions();
+        showCurrentImage('c', null);
+        c_parent_id.value = '';
+        autoFillSortOrder();
+        c_form_title.textContent = 'Создать категорию';
+        c_save_btn.textContent = 'Сохранить';
+        c_cancel_btn.style.display = 'none';
+      }
+
+      async function loadCategories() {
+        const res = await fetch('/categories');
+        categoriesData = await res.json();
+        cat_tbody.innerHTML = categoriesData.map(c => `
+          <tr>
+            <td>${c.id}</td>
+            <td>${imgCell(c.image_name ? '/category-image/' + c.id : null)}</td>
+            <td>${c.name_ru || ''}</td>
+            <td>${c.marketplace_id || ''}</td>
+            <td>${c.parent_id || ''}</td>
+            <td>${c.prod_id || ''}</td>
+            <td>${statusBadge(c.sent)}</td>
+            <td>
+              <button class="small" onclick="sendCategory(${c.id})">Отправить</button>
+              <button class="small secondary" onclick="editCategory(${c.id})">Изменить</button>
+              <button class="small danger" onclick="deleteCategory(${c.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+        populateProductCategories();
+        populateCategoryParents();
+        populateFaqCategoryOptions();
+        if (!editCatId) autoFillSortOrder();
+      }
+
+      function autoFillSortOrder() {
+        const parentId = c_parent_id.value ? Number(c_parent_id.value) : null;
+        const siblings = categoriesData.filter(c => (c.parent_id || null) === parentId && c.id !== editCatId);
+        const used = new Set(siblings.map(c => Number(c.sort_order)).filter(n => n > 0));
+        let n = 1;
+        while (used.has(n)) n++;
+        c_sort_order.value = n;
+      }
+
+      function populateCategoryParents() {
+        const keep = c_parent_id.value;
+        const tops = categoriesData.filter(c => !c.parent_id);
+        c_parent_id.innerHTML = '<option value="">— верхний уровень —</option>' + tops.map(c => `<option value="${c.id}">${catName(c)} (id ${c.id})</option>`).join('');
+        c_parent_id.value = keep;
+      }
+
+      async function sendCategory(id) {
+        try {
+          const res = await fetch('/send-category/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('cat_result', data);
+        } catch (err) { show('cat_result', err.message, false); }
+        loadCategories();
+      }
+
+      async function sendAllCategories() {
+        try {
+          const res = await fetch('/send-all-categories', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('cat_result', data);
+        } catch (err) { show('cat_result', err.message, false); }
+        loadCategories();
+      }
+
+      async function resetCategories() {
+        try {
+          const res = await fetch('/reset-categories', { method: 'POST' });
+          const data = await res.json();
+          show('cat_result', data.message || data, data.success);
+        } catch (err) { show('cat_result', err.message, false); }
+        loadCategories();
+      }
+
+      async function deleteCategory(id) {
+        if (!confirm('Удалить категорию #' + id + '?')) return;
+        try {
+          const res = await fetch('/delete-category/' + id, { method: 'POST' });
+          const data = await res.json();
+          show('cat_result', data.message || data, data.success);
+        } catch (err) { show('cat_result', err.message, false); }
+        loadCategories();
+      }
+
+      async function saveProduct() {
+        const form = new FormData();
+        form.append('name_kk', p_name_kk.value);
+        form.append('name_ru', p_name_ru.value);
+        form.append('name_en', p_name_en.value);
+        form.append('description_ru', p_description_ru.value);
+        form.append('description_kk', p_description_kk.value);
+        form.append('description_en', p_description_en.value);
+        form.append('marketplace_id', p_marketplace_id.value);
+        form.append('category_id', p_category_id.value);
+        form.append('institution_ids', p_institution_ids.value);
+        form.append('price', p_price.value);
+        form.append('sku', p_sku.value);
+        form.append('purchase_limit_id', p_purchase_limit_id.value);
+        form.append('stock_quantity', p_stock_quantity.value);
+        form.append('weight_per_unit', p_weight_per_unit.value);
+        form.append('product_type_id', p_product_type_id.value);
+        form.append('uom_id', p_uom_id.value);
+        if (p_image.files[0]) form.append('image', p_image.files[0]);
+        const url = editProdId ? '/update-product/' + editProdId : '/save-product';
+        try {
+          const res = await fetch(url, { method: 'POST', body: form });
+          const data = await res.json();
+          show('p_result', data.message || data, data.success);
+          if (data.success) { cancelEditProduct(); loadProducts(); }
+        } catch (err) { show('p_result', err.message, false); }
+      }
+
+      function editProduct(id) {
+        const p = productsData.find(x => x.id === id);
+        if (!p) return;
+        editProdId = id;
+        setVal('p_name_kk', p.name_kk);
+        setVal('p_name_ru', p.name_ru);
+        setVal('p_name_en', p.name_en);
+        setVal('p_description_ru', p.description_ru);
+        setVal('p_description_kk', p.description_kk);
+        setVal('p_description_en', p.description_en);
+        setVal('p_purchase_limit_id', p.purchase_limit_id);
+        checkLimitSent();
+        setVal('p_marketplace_id', p.marketplace_id);
+        selectProductCategory(p.category_id);
+        setVal('p_institution_ids', p.institution_ids);
+        setVal('p_price', p.price);
+        setVal('p_sku', p.sku);
+        setVal('p_stock_quantity', p.stock_quantity);
+        setVal('p_weight_per_unit', p.weight_per_unit);
+        setVal('p_product_type_id', p.product_type_id);
+        setVal('p_uom_id', p.uom_id);
+        p_all_inst.checked = (String(p.institution_ids || '') === ALL_INSTITUTIONS);
+        toggleAllInstitutions();
+        p_image.value = '';
+        showCurrentImage('p', p.image_name ? '/product-image/' + id : null);
+        p_form_title.textContent = 'Редактировать товар #' + id;
+        p_save_btn.textContent = 'Обновить';
+        p_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEditProduct() {
+        editProdId = null;
+        document.querySelectorAll('#panel-products input, #panel-products textarea').forEach(i => i.value = '');
+        p_category_id.value = '';
+        p_purchase_limit_id.value = '';
+        checkLimitSent();
+        p_all_inst.checked = true;
+        toggleAllInstitutions();
+        showCurrentImage('p', null);
+        p_form_title.textContent = 'Создать товар';
+        p_save_btn.textContent = 'Сохранить';
+        p_cancel_btn.style.display = 'none';
+      }
+
+      async function loadProducts() {
+        const res = await fetch('/products');
+        productsData = await res.json();
+        prod_tbody.innerHTML = productsData.map(p => `
+          <tr>
+            <td>${p.id}</td>
+            <td>${imgCell(p.image_name ? '/product-image/' + p.id : null)}</td>
+            <td>${p.name_ru || ''}</td>
+            <td>${p.category_id || ''}</td>
+            <td>${p.price || ''}</td>
+            <td>${p.sku || ''}</td>
+            <td>${statusBadge(p.sent)}</td>
+            <td>
+              <button class="small" onclick="sendProduct(${p.id})">Отправить</button>
+              <button class="small secondary" onclick="editProduct(${p.id})">Изменить</button>
+              <button class="small danger" onclick="deleteProduct(${p.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      async function sendProduct(id) {
+        try {
+          const res = await fetch('/send-product/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('prod_result', data);
+        } catch (err) { show('prod_result', err.message, false); }
+        loadProducts();
+      }
+
+      async function sendAllProducts() {
+        try {
+          const res = await fetch('/send-all-products', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('prod_result', data);
+        } catch (err) { show('prod_result', err.message, false); }
+        loadProducts();
+      }
+
+      async function resetProducts() {
+        try {
+          const res = await fetch('/reset-products', { method: 'POST' });
+          const data = await res.json();
+          show('prod_result', data.message || data, data.success);
+        } catch (err) { show('prod_result', err.message, false); }
+        loadProducts();
+      }
+
+      async function deleteProduct(id) {
+        if (!confirm('Удалить товар #' + id + '?')) return;
+        try {
+          const res = await fetch('/delete-product/' + id, { method: 'POST' });
+          const data = await res.json();
+          show('prod_result', data.message || data, data.success);
+        } catch (err) { show('prod_result', err.message, false); }
+        loadProducts();
+      }
+
+      async function saveLimit() {
+        const body = {
+          name_kk: l_name_kk.value,
+          name_ru: l_name_ru.value,
+          name_en: l_name_en.value,
+          marketplace_id: l_marketplace_id.value,
+          limit_value: l_limit_value.value,
+          limit_uom_id: l_limit_uom_id.value,
+        };
+        const url = editLimitId ? '/update-purchase-limit/' + editLimitId : '/save-purchase-limit';
+        try {
+          const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+          const data = await res.json();
+          show('l_result', data.message || data, data.success);
+          if (data.success) { cancelEditLimit(); loadLimits(); }
+        } catch (err) { show('l_result', err.message, false); }
+      }
+
+      function editLimit(id) {
+        const l = limitsData.find(x => x.id === id);
+        if (!l) return;
+        editLimitId = id;
+        setVal('l_name_kk', l.name_kk);
+        setVal('l_name_ru', l.name_ru);
+        setVal('l_name_en', l.name_en);
+        setVal('l_marketplace_id', l.marketplace_id);
+        setVal('l_limit_value', l.limit_value);
+        setVal('l_limit_uom_id', l.limit_uom_id);
+        l_form_title.textContent = 'Редактировать лимит #' + id;
+        l_save_btn.textContent = 'Обновить';
+        l_cancel_btn.style.display = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEditLimit() {
+        editLimitId = null;
+        document.querySelectorAll('#panel-limits input').forEach(i => i.value = '');
+        l_marketplace_id.value = '';
+        l_limit_uom_id.value = '';
+        l_form_title.textContent = 'Создать шаблон лимита';
+        l_save_btn.textContent = 'Сохранить';
+        l_cancel_btn.style.display = 'none';
+      }
+
+      async function loadLimits() {
+        const res = await fetch('/purchase-limits');
+        limitsData = await res.json();
+        lim_tbody.innerHTML = limitsData.map(l => `
+          <tr>
+            <td>${l.id}</td>
+            <td>${l.name_ru || ''}</td>
+            <td>${l.marketplace_id || ''}</td>
+            <td>${l.limit_value != null ? l.limit_value : ''}</td>
+            <td>${uomName(l.limit_uom_id)}</td>
+            <td>${l.prod_id || ''}</td>
+            <td>${statusBadge(l.sent)}</td>
+            <td>
+              <button class="small" onclick="sendLimit(${l.id})">Отправить</button>
+              <button class="small secondary" onclick="editLimit(${l.id})">Изменить</button>
+              <button class="small danger" onclick="deleteLimit(${l.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+        populateProductLimits();
+      }
+
+      async function sendLimit(id) {
+        try {
+          const res = await fetch('/send-purchase-limit/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('lim_result', data);
+        } catch (err) { show('lim_result', err.message, false); }
+        loadLimits();
+      }
+
+      async function sendAllLimits() {
+        try {
+          const res = await fetch('/send-all-purchase-limits', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('lim_result', data);
+        } catch (err) { show('lim_result', err.message, false); }
+        loadLimits();
+      }
+
+      async function deleteLimit(id) {
+        if (!confirm('Удалить лимит #' + id + '?')) return;
+        try {
+          const res = await fetch('/delete-purchase-limit/' + id, { method: 'POST' });
+          const data = await res.json();
+          show('lim_result', data.message || data, data.success);
+        } catch (err) { show('lim_result', err.message, false); }
+        loadLimits();
+      }
+
+      function togglePassword() {
+        const show = a_password.type === 'password';
+        a_password.type = show ? 'text' : 'password';
+        a_password_eye.textContent = show ? 'Скрыть' : 'Показать';
+      }
+
+      function toggleAuthForms() {
+        const f = document.getElementById('auth_forms');
+        f.style.display = f.style.display === 'none' ? 'block' : 'none';
+      }
+
+      async function refreshAuthStatus() {
+        try {
+          const res = await fetch('/auth-status');
+          const data = await res.json();
+          const el = document.getElementById('auth_state');
+          if (data.authorized) {
+            el.textContent = 'авторизован (токен ' + data.preview + ')';
+            el.className = 'ok';
+            logout_btn.style.display = '';
+          } else {
+            el.textContent = 'НЕ авторизован — отправка на прод не пройдёт';
+            el.className = 'no';
+            logout_btn.style.display = 'none';
+          }
+        } catch (err) {
+          document.getElementById('auth_state').textContent = 'ошибка проверки: ' + err.message;
+        }
+      }
+
+      async function login() {
+        const body = { user_name: a_user_name.value, password: a_password.value };
+        try {
+          const res = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          show('auth_result', data.message || data, data.success);
+        } catch (err) { show('auth_result', err.message, false); }
+        refreshAuthStatus();
+      }
+
+      async function setToken() {
+        try {
+          const res = await fetch('/set-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: a_token.value }),
+          });
+          const data = await res.json();
+          show('auth_result', data.message || data, data.success);
+          if (data.success) a_token.value = '';
+        } catch (err) { show('auth_result', err.message, false); }
+        refreshAuthStatus();
+      }
+
+      async function logout() {
+        try {
+          await fetch('/logout', { method: 'POST' });
+        } catch (err) {}
+        refreshAuthStatus();
+      }
+
+      async function sendFaq(id) {
+        try {
+          const res = await fetch('/send-faq/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('f_result', data);
+        } catch (err) { show('f_result', err.message, false); }
+        loadFaq();
+      }
+
+      async function sendAllFaq() {
+        try {
+          const res = await fetch('/send-all-faq', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('f_result', data);
+        } catch (err) { show('f_result', err.message, false); }
+        loadFaq();
+      }
+
+      async function deleteFaq(id) {
+        if (!confirm('Удалить FAQ #' + id + '?')) return;
+        try {
+          const res = await fetch('/faq/' + id, { method: 'DELETE' });
+          const data = await res.json();
+          show('f_result', data.message || data, data.success);
+        } catch (err) { show('f_result', err.message, false); }
+        loadFaq();
+      }
+
+      async function loadFaq() {
+        const res = await fetch('/faq');
+        faqData = await res.json();
+        faq_tbody.innerHTML = faqData.map(f => `
+          <tr>
+            <td>${f.id}</td>
+            <td>${f.title_ru || ''}</td>
+            <td>${f.prod_id || ''}</td>
+            <td>${statusBadge(f.sent)}</td>
+            <td>
+              <button class="small" onclick="sendFaq(${f.id})">Отправить</button>
+              <button class="small secondary" onclick="editFaq(${f.id})">Изменить</button>
+              <button class="small danger" onclick="deleteFaq(${f.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      async function sendContact(id) {
+        try {
+          const res = await fetch('/send-contact/' + id, { method: 'POST' });
+          const data = await res.json();
+          showResult('ct_result', data);
+        } catch (err) { show('ct_result', err.message, false); }
+        loadContacts();
+      }
+
+      async function sendAllContacts() {
+        try {
+          const res = await fetch('/send-all-contact', { method: 'POST' });
+          const data = await res.json();
+          summarizeResults('ct_result', data);
+        } catch (err) { show('ct_result', err.message, false); }
+        loadContacts();
+      }
+
+      async function deleteContact(id) {
+        if (!confirm('Удалить контакт #' + id + '?')) return;
+        try {
+          const res = await fetch('/contact/' + id, { method: 'DELETE' });
+          const data = await res.json();
+          show('ct_result', data.message || data, data.success);
+        } catch (err) { show('ct_result', err.message, false); }
+        loadContacts();
+      }
+
+      async function loadContacts() {
+        const res = await fetch('/contacts');
+        contactsData = await res.json();
+        contact_tbody.innerHTML = contactsData.map(c => `
+          <tr>
+            <td>${c.id}</td>
+            <td>${c.type || ''}</td>
+            <td>${c.value || ''}</td>
+            <td>${c.prod_id || ''}</td>
+            <td>${statusBadge(c.sent)}</td>
+            <td>
+              <button class="small" onclick="sendContact(${c.id})">Отправить</button>
+              <button class="small secondary" onclick="editContact(${c.id})">Изменить</button>
+              <button class="small danger" onclick="deleteContact(${c.id})">Удалить</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      populateUOMs();
+      toggleAllInstitutions();
       toggleAllCatInstitutions();
-      setVal('c_parent_id', c.parent_id);
-      setVal('c_sort_order', c.sort_order);
-      c_image.value = '';
-      showCurrentImage('c', c.image_name ? '/category-image/' + id : null);
-      c_form_title.textContent = 'Редактировать категорию #' + id;
-      c_save_btn.textContent = 'Обновить';
-      c_cancel_btn.style.display = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function cancelEditCategory() {
-      editCatId = null;
-      document.querySelectorAll('#panel-categories input').forEach(i => i.value = '');
-      c_all_inst.checked = true;
-      toggleAllCatInstitutions();
-      showCurrentImage('c', null);
-      c_parent_id.value = '';
-      autoFillSortOrder();
-      c_form_title.textContent = 'Создать категорию';
-      c_save_btn.textContent = 'Сохранить';
-      c_cancel_btn.style.display = 'none';
-    }
-
-    async function loadCategories() {
-      const res = await fetch('/categories');
-      categoriesData = await res.json();
-      cat_tbody.innerHTML = categoriesData.map(c => `
-        <tr>
-          <td>${c.id}</td>
-          <td>${imgCell(c.image_name ? '/category-image/' + c.id : null)}</td>
-          <td>${c.name_ru || ''}</td>
-          <td>${c.marketplace_id || ''}</td>
-          <td>${c.parent_id || ''}</td>
-          <td>${c.prod_id || ''}</td>
-          <td>${statusBadge(c.sent)}</td>
-          <td>
-            <button class="small" onclick="sendCategory(${c.id})">Отправить</button>
-            <button class="small secondary" onclick="editCategory(${c.id})">Изменить</button>
-            <button class="small danger" onclick="deleteCategory(${c.id})">Удалить</button>
-          </td>
-        </tr>`).join('');
+      toggleAllFaqInstitutions();
+      toggleAllContactInstitutions();
+      populateMarketplaces();
+      populateTypesProduct();
       populateProductCategories();
       populateCategoryParents();
-      if (!editCatId) autoFillSortOrder();
-    }
-
-    function autoFillSortOrder() {
-      const parentId = c_parent_id.value ? Number(c_parent_id.value) : null;
-      const siblings = categoriesData.filter(c => (c.parent_id || null) === parentId && c.id !== editCatId);
-      const used = new Set(siblings.map(c => Number(c.sort_order)).filter(n => n > 0));
-      let n = 1;
-      while (used.has(n)) n++;
-      c_sort_order.value = n;
-    }
-
-    function populateCategoryParents() {
-      const keep = c_parent_id.value;
-      const tops = categoriesData.filter(c => !c.parent_id);
-      c_parent_id.innerHTML = '<option value="">— верхний уровень —</option>' + tops.map(c => `<option value="${c.id}">${catName(c)} (id ${c.id})</option>`).join('');
-      c_parent_id.value = keep;
-    }
-
-    async function sendCategory(id) {
-      try {
-        const res = await fetch('/send-category/' + id, { method: 'POST' });
-        const data = await res.json();
-        showResult('cat_result', data);
-      } catch (err) { show('cat_result', err.message, false); }
-      loadCategories();
-    }
-
-    async function sendAllCategories() {
-      try {
-        const res = await fetch('/send-all-categories', { method: 'POST' });
-        const data = await res.json();
-        summarizeResults('cat_result', data);
-      } catch (err) { show('cat_result', err.message, false); }
-      loadCategories();
-    }
-
-    async function resetCategories() {
-      try {
-        const res = await fetch('/reset-categories', { method: 'POST' });
-        const data = await res.json();
-        show('cat_result', data.message || data, data.success);
-      } catch (err) { show('cat_result', err.message, false); }
-      loadCategories();
-    }
-
-    async function deleteCategory(id) {
-      if (!confirm('Удалить категорию #' + id + '?')) return;
-      try {
-        const res = await fetch('/delete-category/' + id, { method: 'POST' });
-        const data = await res.json();
-        show('cat_result', data.message || data, data.success);
-      } catch (err) { show('cat_result', err.message, false); }
-      loadCategories();
-    }
-
-    async function saveProduct() {
-      const form = new FormData();
-      form.append('name_kk', p_name_kk.value);
-      form.append('name_ru', p_name_ru.value);
-      form.append('name_en', p_name_en.value);
-      form.append('description_ru', p_description_ru.value);
-      form.append('description_kk', p_description_kk.value);
-      form.append('description_en', p_description_en.value);
-      form.append('marketplace_id', p_marketplace_id.value);
-      form.append('category_id', p_category_id.value);
-      form.append('institution_ids', p_institution_ids.value);
-      form.append('price', p_price.value);
-      form.append('sku', p_sku.value);
-      form.append('purchase_limit_id', p_purchase_limit_id.value);
-      form.append('stock_quantity', p_stock_quantity.value);
-      form.append('weight_per_unit', p_weight_per_unit.value);
-      form.append('product_type_id', p_product_type_id.value);
-      form.append('uom_id', p_uom_id.value);
-      if (p_image.files[0]) form.append('image', p_image.files[0]);
-      const url = editProdId ? '/update-product/' + editProdId : '/save-product';
-      try {
-        const res = await fetch(url, { method: 'POST', body: form });
-        const data = await res.json();
-        show('p_result', data.message || data, data.success);
-        if (data.success) { cancelEditProduct(); loadProducts(); }
-      } catch (err) { show('p_result', err.message, false); }
-    }
-
-    function editProduct(id) {
-      const p = productsData.find(x => x.id === id);
-      if (!p) return;
-      editProdId = id;
-      setVal('p_name_kk', p.name_kk);
-      setVal('p_name_ru', p.name_ru);
-      setVal('p_name_en', p.name_en);
-      setVal('p_description_ru', p.description_ru);
-      setVal('p_description_kk', p.description_kk);
-      setVal('p_description_en', p.description_en);
-      setVal('p_purchase_limit_id', p.purchase_limit_id);
-      checkLimitSent();
-      setVal('p_marketplace_id', p.marketplace_id);
-      selectProductCategory(p.category_id);
-      setVal('p_institution_ids', p.institution_ids);
-      setVal('p_price', p.price);
-      setVal('p_sku', p.sku);
-      setVal('p_stock_quantity', p.stock_quantity);
-      setVal('p_weight_per_unit', p.weight_per_unit);
-      setVal('p_product_type_id', p.product_type_id);
-      setVal('p_uom_id', p.uom_id);
-      p_all_inst.checked = (String(p.institution_ids || '') === ALL_INSTITUTIONS);
-      toggleAllInstitutions();
-      p_image.value = '';
-      showCurrentImage('p', p.image_name ? '/product-image/' + id : null);
-      p_form_title.textContent = 'Редактировать товар #' + id;
-      p_save_btn.textContent = 'Обновить';
-      p_cancel_btn.style.display = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function cancelEditProduct() {
-      editProdId = null;
-      document.querySelectorAll('#panel-products input, #panel-products textarea').forEach(i => i.value = '');
-      p_category_id.value = '';
-      p_purchase_limit_id.value = '';
-      checkLimitSent();
-      p_all_inst.checked = true;
-      toggleAllInstitutions();
-      showCurrentImage('p', null);
-      p_form_title.textContent = 'Создать товар';
-      p_save_btn.textContent = 'Сохранить';
-      p_cancel_btn.style.display = 'none';
-    }
-
-    async function loadProducts() {
-      const res = await fetch('/products');
-      productsData = await res.json();
-      prod_tbody.innerHTML = productsData.map(p => `
-        <tr>
-          <td>${p.id}</td>
-          <td>${imgCell(p.image_name ? '/product-image/' + p.id : null)}</td>
-          <td>${p.name_ru || ''}</td>
-          <td>${p.category_id || ''}</td>
-          <td>${p.price || ''}</td>
-          <td>${p.sku || ''}</td>
-          <td>${statusBadge(p.sent)}</td>
-          <td>
-            <button class="small" onclick="sendProduct(${p.id})">Отправить</button>
-            <button class="small secondary" onclick="editProduct(${p.id})">Изменить</button>
-            <button class="small danger" onclick="deleteProduct(${p.id})">Удалить</button>
-          </td>
-        </tr>`).join('');
-    }
-
-    async function sendProduct(id) {
-      try {
-        const res = await fetch('/send-product/' + id, { method: 'POST' });
-        const data = await res.json();
-        showResult('prod_result', data);
-      } catch (err) { show('prod_result', err.message, false); }
-      loadProducts();
-    }
-
-    async function sendAllProducts() {
-      try {
-        const res = await fetch('/send-all-products', { method: 'POST' });
-        const data = await res.json();
-        summarizeResults('prod_result', data);
-      } catch (err) { show('prod_result', err.message, false); }
-      loadProducts();
-    }
-
-    async function resetProducts() {
-      try {
-        const res = await fetch('/reset-products', { method: 'POST' });
-        const data = await res.json();
-        show('prod_result', data.message || data, data.success);
-      } catch (err) { show('prod_result', err.message, false); }
-      loadProducts();
-    }
-
-    async function deleteProduct(id) {
-      if (!confirm('Удалить товар #' + id + '?')) return;
-      try {
-        const res = await fetch('/delete-product/' + id, { method: 'POST' });
-        const data = await res.json();
-        show('prod_result', data.message || data, data.success);
-      } catch (err) { show('prod_result', err.message, false); }
-      loadProducts();
-    }
-
-    async function saveLimit() {
-      const body = {
-        name_kk: l_name_kk.value,
-        name_ru: l_name_ru.value,
-        name_en: l_name_en.value,
-        marketplace_id: l_marketplace_id.value,
-        limit_value: l_limit_value.value,
-        limit_uom_id: l_limit_uom_id.value,
-      };
-      const url = editLimitId ? '/update-purchase-limit/' + editLimitId : '/save-purchase-limit';
-      try {
-        const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-        const data = await res.json();
-        show('l_result', data.message || data, data.success);
-        if (data.success) { cancelEditLimit(); loadLimits(); }
-      } catch (err) { show('l_result', err.message, false); }
-    }
-
-    function editLimit(id) {
-      const l = limitsData.find(x => x.id === id);
-      if (!l) return;
-      editLimitId = id;
-      setVal('l_name_kk', l.name_kk);
-      setVal('l_name_ru', l.name_ru);
-      setVal('l_name_en', l.name_en);
-      setVal('l_marketplace_id', l.marketplace_id);
-      setVal('l_limit_value', l.limit_value);
-      setVal('l_limit_uom_id', l.limit_uom_id);
-      l_form_title.textContent = 'Редактировать лимит #' + id;
-      l_save_btn.textContent = 'Обновить';
-      l_cancel_btn.style.display = '';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function cancelEditLimit() {
-      editLimitId = null;
-      document.querySelectorAll('#panel-limits input').forEach(i => i.value = '');
-      l_marketplace_id.value = '';
-      l_limit_uom_id.value = '';
-      l_form_title.textContent = 'Создать шаблон лимита';
-      l_save_btn.textContent = 'Сохранить';
-      l_cancel_btn.style.display = 'none';
-    }
-
-    async function loadLimits() {
-      const res = await fetch('/purchase-limits');
-      limitsData = await res.json();
-      lim_tbody.innerHTML = limitsData.map(l => `
-        <tr>
-          <td>${l.id}</td>
-          <td>${l.name_ru || ''}</td>
-          <td>${l.marketplace_id || ''}</td>
-          <td>${l.limit_value != null ? l.limit_value : ''}</td>
-          <td>${uomName(l.limit_uom_id)}</td>
-          <td>${l.prod_id || ''}</td>
-          <td>${statusBadge(l.sent)}</td>
-          <td>
-            <button class="small" onclick="sendLimit(${l.id})">Отправить</button>
-            <button class="small secondary" onclick="editLimit(${l.id})">Изменить</button>
-            <button class="small danger" onclick="deleteLimit(${l.id})">Удалить</button>
-          </td>
-        </tr>`).join('');
-      populateProductLimits();
-    }
-
-    async function sendLimit(id) {
-      try {
-        const res = await fetch('/send-purchase-limit/' + id, { method: 'POST' });
-        const data = await res.json();
-        showResult('lim_result', data);
-      } catch (err) { show('lim_result', err.message, false); }
-      loadLimits();
-    }
-
-    async function sendAllLimits() {
-      try {
-        const res = await fetch('/send-all-purchase-limits', { method: 'POST' });
-        const data = await res.json();
-        summarizeResults('lim_result', data);
-      } catch (err) { show('lim_result', err.message, false); }
-      loadLimits();
-    }
-
-    async function deleteLimit(id) {
-      if (!confirm('Удалить лимит #' + id + '?')) return;
-      try {
-        const res = await fetch('/delete-purchase-limit/' + id, { method: 'POST' });
-        const data = await res.json();
-        show('lim_result', data.message || data, data.success);
-      } catch (err) { show('lim_result', err.message, false); }
-      loadLimits();
-    }
-
-    function togglePassword() {
-      const show = a_password.type === 'password';
-      a_password.type = show ? 'text' : 'password';
-      a_password_eye.textContent = show ? 'Скрыть' : 'Показать';
-    }
-
-    function toggleAuthForms() {
-      const f = document.getElementById('auth_forms');
-      f.style.display = f.style.display === 'none' ? 'block' : 'none';
-    }
-
-    async function refreshAuthStatus() {
-      try {
-        const res = await fetch('/auth-status');
-        const data = await res.json();
-        const el = document.getElementById('auth_state');
-        if (data.authorized) {
-          el.textContent = 'авторизован (токен ' + data.preview + ')';
-          el.className = 'ok';
-          logout_btn.style.display = '';
-        } else {
-          el.textContent = 'НЕ авторизован — отправка на прод не пройдёт';
-          el.className = 'no';
-          logout_btn.style.display = 'none';
-        }
-      } catch (err) {
-        document.getElementById('auth_state').textContent = 'ошибка проверки: ' + err.message;
-      }
-    }
-
-    async function login() {
-      const body = { user_name: a_user_name.value, password: a_password.value };
-      try {
-        const res = await fetch('/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        show('auth_result', data.message || data, data.success);
-      } catch (err) { show('auth_result', err.message, false); }
+      populateFaqCategoryOptions();
       refreshAuthStatus();
-    }
-
-    async function setToken() {
-      try {
-        const res = await fetch('/set-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token: a_token.value }),
-        });
-        const data = await res.json();
-        show('auth_result', data.message || data, data.success);
-        if (data.success) a_token.value = '';
-      } catch (err) { show('auth_result', err.message, false); }
-      refreshAuthStatus();
-    }
-
-    async function logout() {
-      try {
-        await fetch('/logout', { method: 'POST' });
-      } catch (err) {}
-      refreshAuthStatus();
-    }
-
-    populateUOMs();
-    toggleAllInstitutions();
-    toggleAllCatInstitutions();
-    populateMarketplaces();
-    populateTypesProduct();
-    populateProductCategories();
-    populateCategoryParents();
-    refreshAuthStatus();
-    loadCategories();
-    loadProducts();
-    loadLimits();
-  </script>
-</body>
-</html>
+      loadCategories();
+      loadProducts();
+      loadLimits();
+      loadFaq();
+      loadContacts();
+      loadFaqCategories();
+    </script>
+  </body>
+  </html>
