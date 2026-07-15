@@ -46,7 +46,12 @@ function buildProductForm(p) {
   }
   form.append('category_id', cat.prod_id);
   appendInstitutionIds(form, p.institution_ids);
-  form.append('price', p.price);
+  if (p.price != null && p.price !== '') {
+    const priceCents = Math.round(Number(p.price) * 100);
+    form.append('price', priceCents);
+  } else {
+    form.append('price', p.price);
+  }
   if (p.purchase_limit_id) {
     const limit = db.prepare('SELECT name_ru, prod_id FROM purchase_limits WHERE id = ?').get(p.purchase_limit_id);
     if (!limit || !limit.prod_id) {
