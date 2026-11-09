@@ -35,8 +35,20 @@ function isTokenValid() {
   return Date.now() < exp - 30000;
 }
 
+// Бэкенд требует подтверждение надписи при входе (consent_version), а при новой
+// версии NDA — ещё и offer_version. Берём действующие версии перед логином.
+async function getLegalVersions() {
+  const resp = await axios.get(BROMART_URL + '/api/v1/admin/auth/legal-documents');
+  const d = (resp.data && resp.data.data) || {};
+  return {
+    consent_version: d.login_notice ? String(d.login_notice.version) : undefined,
+    offer_version: d.offer ? String(d.offer.version) : undefined,
+  };
+}
+
 async function doLogin(user_name, password) {
-  const resp = await axios.post(BROMART_URL + '/api/v1/admin/auth/login', { user_name, password });
+  const legal = await getLegalVersions();
+  const resp = await axios.post(BROMART_URL + '/api/v1/admin/auth/login', { user_name, password, ...legal });
   const d = resp.data;
   const token = d.access_token || d.token || (d.data && (d.data.access_token || d.data.token));
   if (!token) {
@@ -48,11 +60,16 @@ async function doLogin(user_name, password) {
   return token;
 }
 
-async function ensureToken() {
-  if (isTokenValid()) return;
+// force — сессия закрыта на бэкенде (например, 15 минут бездействия), хотя JWT ещё не истёк.
+async function ensureToken(force = false) {
+  if (!force && isTokenValid()) return;
   const creds = getCreds();
-  if (!creds) throw new Error('Нет токена и сохранённого логина. Войди в систему.');
-  console.log('Токен истёк — авторизуюсь заново');
+  if (!creds) {
+    throw new Error(force
+      ? 'Сессия на бэкенде завершена, а сохранённого логина нет. Войди в систему заново.'
+      : 'Нет токена и сохранённого логина. Войди в систему.');
+  }
+  console.log(force ? 'Сессия завершена на бэкенде — авторизуюсь заново' : 'Токен истёк — авторизуюсь заново');
   await doLogin(creds.user_name, creds.password);
 }
 

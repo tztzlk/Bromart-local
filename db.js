@@ -110,4 +110,20 @@ for (const sql of migrations) {
   try { db.exec(sql); } catch (e) {}
 }
 
+// prod_id у товаров — чтобы повторная отправка шла PATCH-ем, а не создавала дубликат.
+// image_synced — картинка уже на проде; при PATCH её не перезаливаем, пока не загрузят новую.
+const syncMigrations = [
+  ['ALTER TABLE products ADD COLUMN prod_id INTEGER', null],
+  ['ALTER TABLE categories ADD COLUMN image_synced INTEGER DEFAULT 0',
+    'UPDATE categories SET image_synced = 1 WHERE prod_id IS NOT NULL'],
+  ['ALTER TABLE products ADD COLUMN image_synced INTEGER DEFAULT 0',
+    'UPDATE products SET image_synced = 1 WHERE prod_id IS NOT NULL'],
+];
+for (const [alter, backfill] of syncMigrations) {
+  try {
+    db.exec(alter);
+    if (backfill) db.exec(backfill); // только в момент добавления колонки
+  } catch (e) {}
+}
+
 module.exports = db;

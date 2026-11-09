@@ -100,7 +100,7 @@
             <label>Institution IDs (через запятую: 1,2)</label>
             <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
               <input type="checkbox" id="c_all_inst" checked onchange="toggleAllCatInstitutions()" style="width:auto;">
-              Во все учреждения (1–17)
+              Во все учреждения (<span class="all-inst-label">1, 6</span>)
             </label>
             <input id="c_institution_ids" type="text">
           </div>
@@ -157,7 +157,7 @@
             <label>Institution IDs (через запятую: 1,2)</label>
             <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
               <input type="checkbox" id="p_all_inst" checked onchange="toggleAllInstitutions()" style="width:auto;">
-              Во все учреждения (1–17)
+              Во все учреждения (<span class="all-inst-label">1, 6</span>)
             </label>
             <input id="p_institution_ids" type="text">
           </div>
@@ -294,7 +294,7 @@
           <label>Institution IDs (через запятую)</label>
           <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
             <input type="checkbox" id="f_all_inst" checked onchange="toggleAllFaqInstitutions()" style="width:auto;">
-            Во все учреждения (1–17)
+            Во все учреждения (<span class="all-inst-label">1, 6</span>)
           </label>
           <input id="f_institution_ids" type="text">
         </div>
@@ -348,7 +348,7 @@
           <label>Institution IDs (через запятую)</label>
           <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-bottom:6px;">
             <input type="checkbox" id="ct_all_inst" checked onchange="toggleAllContactInstitutions()" style="width:auto;">
-            Во все учреждения (1–17)
+            Во все учреждения (<span class="all-inst-label">1, 6</span>)
           </label>
           <input id="ct_institution_ids" type="text">
         </div>
@@ -384,7 +384,28 @@
       let editFaqId = null;
       let editContactId = null;
 
-      const ALL_INSTITUTIONS = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17';
+      // Заполняется с бэкенда (GET /institutions); пока не загрузили — известные 1 и 6
+      let ALL_INSTITUTIONS = '1,6';
+
+      async function loadInstitutions() {
+        try {
+          const res = await fetch('/institutions');
+          const data = await res.json();
+          if (!data.success) { console.warn('Учреждения не загружены:', data.message); return; }
+          const ids = data.institutions.filter(i => i.is_active).map(i => i.id);
+          if (!ids.length) return;
+          ALL_INSTITUTIONS = ids.join(',');
+          const title = data.institutions.filter(i => i.is_active).map(i => i.id + ' — ' + (i.name || '')).join('\n');
+          document.querySelectorAll('.all-inst-label').forEach(el => {
+            el.textContent = ids.join(', ');
+            el.title = title;
+          });
+          toggleAllInstitutions();
+          toggleAllCatInstitutions();
+          toggleAllFaqInstitutions();
+          toggleAllContactInstitutions();
+        } catch (err) { console.warn('Учреждения не загружены:', err.message); }
+      }
 
       const PRODUCT_TYPES = [
         { id: 1, name: 'Обычный' },
@@ -625,9 +646,10 @@
             <td>${c.id}</td>
             <td>${c.name_ru || ''}</td>
             <td>${c.prod_id || ''}</td>
-            <td>${statusBadge(c.sent)}</td>
+            <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendFaqCategory(${c.id})">Отправить</button>
+              <button class="small" onclick="sendFaqCategory(${c.id})">${sendLabel(c.prod_id)}</button>
+              ${unlinkBtn('faq_categories', c, loadFaqCategories, 'fc_result')}
               <button class="small secondary" onclick="editFaqCategory(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteFaqCategory(${c.id})">Удалить</button>
             </td>
@@ -763,7 +785,9 @@
         if (!data.results) { showResult(id, data); return; }
         const fail = data.results.filter(r => !r.success);
         const ok = data.results.length - fail.length;
-        let txt = 'Отправлено: ' + ok + ' из ' + data.results.length;
+        const created = data.results.filter(r => r.success && r.action === 'created').length;
+        const updated = data.results.filter(r => r.success && r.action === 'updated').length;
+        let txt = 'Отправлено: ' + ok + ' из ' + data.results.length + ' (создано ' + created + ', обновлено ' + updated + ')';
         if (fail.length) {
           txt += '\nОшибки:';
           for (const f of fail) txt += '\n  #' + f.id + ': ' + (f.message || f.error);
@@ -775,8 +799,28 @@
         document.getElementById(id).value = (v == null ? '' : v);
       }
 
-      function statusBadge(sent) {
-        return sent ? 'отправлено' : 'не отправлено';
+      // prodId есть, но sent = 0 — запись уже на проде и изменена локально: уйдёт PATCH-ем
+      function statusBadge(sent, prodId) {
+        if (sent) return 'отправлено';
+        return prodId ? 'изменено — обновится на проде' : 'не отправлено';
+      }
+
+      function sendLabel(prodId) {
+        return prodId ? 'Обновить на проде' : 'Отправить';
+      }
+
+      function unlinkBtn(table, item, reload, resultId) {
+        if (!item.prod_id) return '';
+        return `<button class="small secondary" title="Забыть prod id ${item.prod_id}: следующая отправка создаст новую запись" onclick="unlinkFromProd('${table}', ${item.id}, ${reload}, '${resultId}')">Отвязать</button>`;
+      }
+
+      async function unlinkFromProd(table, id, reload, resultId) {
+        if (!confirm('Отвязать запись #' + id + ' от прода?\nСледующая отправка создаст НОВУЮ запись на проде. Делайте так, только если старая там удалена.')) return;
+        try {
+          const res = await fetch('/unlink/' + table + '/' + id, { method: 'POST' });
+          showResult(resultId, await res.json());
+        } catch (err) { show(resultId, err.message, false); }
+        reload();
       }
 
       function toggleAllInstitutions() {
@@ -938,9 +982,10 @@
             <td>${c.marketplace_id || ''}</td>
             <td>${c.parent_id || ''}</td>
             <td>${c.prod_id || ''}</td>
-            <td>${statusBadge(c.sent)}</td>
+            <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendCategory(${c.id})">Отправить</button>
+              <button class="small" onclick="sendCategory(${c.id})">${sendLabel(c.prod_id)}</button>
+              ${unlinkBtn('categories', c, loadCategories, 'cat_result')}
               <button class="small secondary" onclick="editCategory(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteCategory(${c.id})">Удалить</button>
             </td>
@@ -1088,9 +1133,10 @@
             <td>${p.category_id || ''}</td>
             <td>${p.price || ''}</td>
             <td>${p.sku || ''}</td>
-            <td>${statusBadge(p.sent)}</td>
+            <td>${statusBadge(p.sent, p.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendProduct(${p.id})">Отправить</button>
+              <button class="small" onclick="sendProduct(${p.id})">${sendLabel(p.prod_id)}</button>
+              ${unlinkBtn('products', p, loadProducts, 'prod_result')}
               <button class="small secondary" onclick="editProduct(${p.id})">Изменить</button>
               <button class="small danger" onclick="deleteProduct(${p.id})">Удалить</button>
             </td>
@@ -1189,9 +1235,10 @@
             <td>${l.limit_value != null ? l.limit_value : ''}</td>
             <td>${uomName(l.limit_uom_id)}</td>
             <td>${l.prod_id || ''}</td>
-            <td>${statusBadge(l.sent)}</td>
+            <td>${statusBadge(l.sent, l.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendLimit(${l.id})">Отправить</button>
+              <button class="small" onclick="sendLimit(${l.id})">${sendLabel(l.prod_id)}</button>
+              ${unlinkBtn('purchase_limits', l, loadLimits, 'lim_result')}
               <button class="small secondary" onclick="editLimit(${l.id})">Изменить</button>
               <button class="small danger" onclick="deleteLimit(${l.id})">Удалить</button>
             </td>
@@ -1267,6 +1314,7 @@
           });
           const data = await res.json();
           show('auth_result', data.message || data, data.success);
+          if (data.success) loadInstitutions();
         } catch (err) { show('auth_result', err.message, false); }
         refreshAuthStatus();
       }
@@ -1280,7 +1328,7 @@
           });
           const data = await res.json();
           show('auth_result', data.message || data, data.success);
-          if (data.success) a_token.value = '';
+          if (data.success) { a_token.value = ''; loadInstitutions(); }
         } catch (err) { show('auth_result', err.message, false); }
         refreshAuthStatus();
       }
@@ -1328,9 +1376,10 @@
             <td>${f.id}</td>
             <td>${f.title_ru || ''}</td>
             <td>${f.prod_id || ''}</td>
-            <td>${statusBadge(f.sent)}</td>
+            <td>${statusBadge(f.sent, f.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendFaq(${f.id})">Отправить</button>
+              <button class="small" onclick="sendFaq(${f.id})">${sendLabel(f.prod_id)}</button>
+              ${unlinkBtn('faq_articles', f, loadFaq, 'f_result')}
               <button class="small secondary" onclick="editFaq(${f.id})">Изменить</button>
               <button class="small danger" onclick="deleteFaq(${f.id})">Удалить</button>
             </td>
@@ -1374,9 +1423,10 @@
             <td>${c.type || ''}</td>
             <td>${c.value || ''}</td>
             <td>${c.prod_id || ''}</td>
-            <td>${statusBadge(c.sent)}</td>
+            <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
-              <button class="small" onclick="sendContact(${c.id})">Отправить</button>
+              <button class="small" onclick="sendContact(${c.id})">${sendLabel(c.prod_id)}</button>
+              ${unlinkBtn('contacts', c, loadContacts, 'ct_result')}
               <button class="small secondary" onclick="editContact(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteContact(${c.id})">Удалить</button>
             </td>
@@ -1394,6 +1444,7 @@
       populateCategoryParents();
       populateFaqCategoryOptions();
       refreshAuthStatus();
+      loadInstitutions();
       loadCategories();
       loadProducts();
       loadLimits();

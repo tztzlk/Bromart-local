@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { sendFaqArticle } = require('../bromart');
+const { sendFaqArticle, syncMessage } = require('../bromart');
 const { fillTranslations } = require('../translate');
 
 router.post('/faq/article', async (req, res) => {
@@ -78,8 +78,8 @@ router.post('/send-faq/:id', async (req, res) => {
   const article = db.prepare('SELECT * FROM faq_articles WHERE id = ?').get(req.params.id);
   if (!article) return res.status(404).json({ success: false, message: 'Статья не найдена' });
   try {
-    await sendFaqArticle(article);
-    res.json({ success: true, message: 'Статья отправлена на Bromart' });
+    const r = await sendFaqArticle(article);
+    res.json({ success: true, message: syncMessage('Статья FAQ создана', 'Статья FAQ обновлена', r) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, detail: err.response && err.response.data });
   }
@@ -90,8 +90,8 @@ router.post('/send-all-faq', async (req, res) => {
   const results = [];
   for (const article of articles) {
     try {
-      await sendFaqArticle(article);
-      results.push({ id: article.id, success: true });
+      const r = await sendFaqArticle(article);
+      results.push({ id: article.id, success: true, action: r.action });
     } catch (err) {
       const body = err.response && err.response.data;
       const msg = (body && (body.message || (body.detail && body.detail.message))) || err.message;

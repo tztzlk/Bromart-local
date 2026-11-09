@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { sendContact } = require('../bromart');
+const { sendContact, syncMessage } = require('../bromart');
 const db = require('../db');
 const { fillTranslations } = require('../translate');
 
@@ -74,8 +74,8 @@ router.post('/send-contact/:id', async (req, res) => {
   const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(req.params.id);
   if (!contact) return res.status(404).json({ success: false, message: 'Контакт не найден' });
   try {
-    await sendContact(contact);
-    res.json({ success: true, message: 'Контакт отправлен на Bromart' });
+    const r = await sendContact(contact);
+    res.json({ success: true, message: syncMessage('Контакт создан', 'Контакт обновлён', r) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, detail: err.response && err.response.data });
   }
@@ -86,8 +86,8 @@ router.post('/send-all-contact', async (req, res) => {
   const results = [];
   for (const contact of contacts) {
     try {
-      await sendContact(contact);
-      results.push({ id: contact.id, success: true });
+      const r = await sendContact(contact);
+      results.push({ id: contact.id, success: true, action: r.action });
     } catch (err) {
       const body = err.response && err.response.data;
       const msg = (body && (body.message || (body.detail && body.detail.message))) || err.message;

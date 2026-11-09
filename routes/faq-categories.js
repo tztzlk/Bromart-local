@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { sendFaqCategory } = require('../bromart');
+const { sendFaqCategory, syncMessage } = require('../bromart');
 const { fillTranslations } = require('../translate');
 
 router.post('/faq-category', async (req, res) => {
@@ -59,8 +59,8 @@ router.post('/send-faq-category/:id', async (req, res) => {
   const category = db.prepare('SELECT * FROM faq_categories WHERE id = ?').get(req.params.id);
   if (!category) return res.status(404).json({ success: false, message: 'FAQ Category не найдена' });
   try {
-    await sendFaqCategory(category);
-    res.json({ success: true, message: 'FAQ Category отправлена на Bromart' });
+    const r = await sendFaqCategory(category);
+    res.json({ success: true, message: syncMessage('FAQ Category создана', 'FAQ Category обновлена', r) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, detail: err.response && err.response.data });
   }
@@ -71,8 +71,8 @@ router.post('/send-all-faq-categories', async (req, res) => {
   const results = [];
   for (const category of categories) {
     try {
-      await sendFaqCategory(category);
-      results.push({ id: category.id, success: true });
+      const r = await sendFaqCategory(category);
+      results.push({ id: category.id, success: true, action: r.action });
     } catch (err) {
       const body = err.response && err.response.data;
       const msg = (body && (body.message || (body.detail && body.detail.message))) || err.message;

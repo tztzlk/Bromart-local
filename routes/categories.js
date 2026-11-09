@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const router = express.Router();
 const db = require('../db');
-const { sendCategory } = require('../bromart');
+const { sendCategory, syncMessage } = require('../bromart');
 const { fillTranslations } = require('../translate');
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -35,7 +35,7 @@ router.post('/update-category/:id', upload.single('image'), async (req, res) => 
     await fillTranslations(b, ['name']);
     if (req.file) {
       db.prepare(`
-        UPDATE categories SET name_kk=?, name_ru=?, name_en=?, marketplace_id=?, institution_ids=?, parent_id=?, sort_order=?, image_name=?, image_data=?, image_mime=?, sent=0 WHERE id=?
+        UPDATE categories SET name_kk=?, name_ru=?, name_en=?, marketplace_id=?, institution_ids=?, parent_id=?, sort_order=?, image_name=?, image_data=?, image_mime=?, image_synced=0, sent=0 WHERE id=?
       `).run(b.name_kk, b.name_ru, b.name_en, b.marketplace_id, b.institution_ids, b.parent_id || null, b.sort_order || null, req.file.originalname, req.file.buffer, req.file.mimetype, req.params.id);
     } else {
       db.prepare(`
@@ -64,8 +64,8 @@ router.post('/send-category/:id', async (req, res) => {
   const cat = db.prepare('SELECT * FROM categories WHERE id = ?').get(req.params.id);
   if (!cat) return res.status(404).json({ success: false, message: 'Категория не найдена' });
   try {
-    await sendCategory(cat);
-    res.json({ success: true, message: 'Категория отправлена на прод' });
+    const r = await sendCategory(cat);
+    res.json({ success: true, message: syncMessage('Категория создана', 'Категория обновлена', r) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, detail: err.response && err.response.data });
   }
@@ -76,8 +76,8 @@ router.post('/send-all-categories', async (req, res) => {
   const results = [];
   for (const cat of categories) {
     try {
-      await sendCategory(cat);
-      results.push({ id: cat.id, success: true });
+      const r = await sendCategory(cat);
+      results.push({ id: cat.id, success: true, action: r.action });
     } catch (err) {
       const body = err.response && err.response.data;
       const msg = (body && (body.message || (body.detail && body.detail.message))) || err.message;
@@ -95,7 +95,7 @@ router.post('/delete-category/:id', (req, res) => {
 
 router.post('/reset-categories', (req, res) => {
   const info = db.prepare('UPDATE categories SET sent = 0').run();
-  res.json({ success: true, message: 'Сброшено категорий: ' + info.changes });
+  res.json({ success: true, message: 'Помечено к повторной отправке категорий: ' + info.changes + ' (отправленные ранее обновятся PATCH-ем, без дублей)' });
 });
 
 module.exports = router;

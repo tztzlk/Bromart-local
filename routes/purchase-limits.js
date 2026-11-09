@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { sendPurchaseLimit } = require('../bromart');
+const { sendPurchaseLimit, syncMessage } = require('../bromart');
 const { fillTranslations } = require('../translate');
 
 router.post('/save-purchase-limit', async (req, res) => {
@@ -42,8 +42,8 @@ router.post('/send-purchase-limit/:id', async (req, res) => {
   const limit = db.prepare('SELECT * FROM purchase_limits WHERE id = ?').get(req.params.id);
   if (!limit) return res.status(404).json({ success: false, message: 'Лимит не найден' });
   try {
-    await sendPurchaseLimit(limit);
-    res.json({ success: true, message: 'Лимит отправлен на прод' });
+    const r = await sendPurchaseLimit(limit);
+    res.json({ success: true, message: syncMessage('Лимит создан', 'Лимит обновлён', r) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message, detail: err.response && err.response.data });
   }
@@ -54,8 +54,8 @@ router.post('/send-all-purchase-limits', async (req, res) => {
   const results = [];
   for (const limit of limits) {
     try {
-      await sendPurchaseLimit(limit);
-      results.push({ id: limit.id, success: true });
+      const r = await sendPurchaseLimit(limit);
+      results.push({ id: limit.id, success: true, action: r.action });
     } catch (err) {
       const body = err.response && err.response.data;
       const msg = (body && (body.message || (body.detail && body.detail.message))) || err.message;
