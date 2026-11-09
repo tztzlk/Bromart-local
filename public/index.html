@@ -649,7 +649,7 @@
             <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
               <button class="small" onclick="sendFaqCategory(${c.id})">${sendLabel(c.prod_id)}</button>
-              ${unlinkBtn('faq_categories', c, loadFaqCategories, 'fc_result')}
+              ${unlinkBtn('faq_categories', c, 'loadFaqCategories', 'fc_result')}
               <button class="small secondary" onclick="editFaqCategory(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteFaqCategory(${c.id})">Удалить</button>
             </td>
@@ -811,7 +811,7 @@
 
       function unlinkBtn(table, item, reload, resultId) {
         if (!item.prod_id) return '';
-        return `<button class="small secondary" title="Забыть prod id ${item.prod_id}: следующая отправка создаст новую запись" onclick="unlinkFromProd('${table}', ${item.id}, ${reload}, '${resultId}')">Отвязать</button>`;
+        return `<button class="small secondary" title="Забыть prod id ${item.prod_id}: следующая отправка создаст новую запись" onclick="unlinkFromProd('${table}', ${item.id}, '${reload}', '${resultId}')">Отвязать</button>`;
       }
 
       async function unlinkFromProd(table, id, reload, resultId) {
@@ -820,7 +820,7 @@
           const res = await fetch('/unlink/' + table + '/' + id, { method: 'POST' });
           showResult(resultId, await res.json());
         } catch (err) { show(resultId, err.message, false); }
-        reload();
+        if (typeof window[reload] === 'function') window[reload]();
       }
 
       function toggleAllInstitutions() {
@@ -985,7 +985,7 @@
             <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
               <button class="small" onclick="sendCategory(${c.id})">${sendLabel(c.prod_id)}</button>
-              ${unlinkBtn('categories', c, loadCategories, 'cat_result')}
+              ${unlinkBtn('categories', c, 'loadCategories', 'cat_result')}
               <button class="small secondary" onclick="editCategory(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteCategory(${c.id})">Удалить</button>
             </td>
@@ -1136,7 +1136,7 @@
             <td>${statusBadge(p.sent, p.prod_id)}</td>
             <td>
               <button class="small" onclick="sendProduct(${p.id})">${sendLabel(p.prod_id)}</button>
-              ${unlinkBtn('products', p, loadProducts, 'prod_result')}
+              ${unlinkBtn('products', p, 'loadProducts', 'prod_result')}
               <button class="small secondary" onclick="editProduct(${p.id})">Изменить</button>
               <button class="small danger" onclick="deleteProduct(${p.id})">Удалить</button>
             </td>
@@ -1238,7 +1238,7 @@
             <td>${statusBadge(l.sent, l.prod_id)}</td>
             <td>
               <button class="small" onclick="sendLimit(${l.id})">${sendLabel(l.prod_id)}</button>
-              ${unlinkBtn('purchase_limits', l, loadLimits, 'lim_result')}
+              ${unlinkBtn('purchase_limits', l, 'loadLimits', 'lim_result')}
               <button class="small secondary" onclick="editLimit(${l.id})">Изменить</button>
               <button class="small danger" onclick="deleteLimit(${l.id})">Удалить</button>
             </td>
@@ -1379,7 +1379,7 @@
             <td>${statusBadge(f.sent, f.prod_id)}</td>
             <td>
               <button class="small" onclick="sendFaq(${f.id})">${sendLabel(f.prod_id)}</button>
-              ${unlinkBtn('faq_articles', f, loadFaq, 'f_result')}
+              ${unlinkBtn('faq_articles', f, 'loadFaq', 'f_result')}
               <button class="small secondary" onclick="editFaq(${f.id})">Изменить</button>
               <button class="small danger" onclick="deleteFaq(${f.id})">Удалить</button>
             </td>
@@ -1426,7 +1426,7 @@
             <td>${statusBadge(c.sent, c.prod_id)}</td>
             <td>
               <button class="small" onclick="sendContact(${c.id})">${sendLabel(c.prod_id)}</button>
-              ${unlinkBtn('contacts', c, loadContacts, 'ct_result')}
+              ${unlinkBtn('contacts', c, 'loadContacts', 'ct_result')}
               <button class="small secondary" onclick="editContact(${c.id})">Изменить</button>
               <button class="small danger" onclick="deleteContact(${c.id})">Удалить</button>
             </td>
